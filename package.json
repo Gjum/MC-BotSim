@@ -1,0 +1,49 @@
+{
+  "name": "mc-botsim",
+  "version": "0.1.0",
+  "description": "Simulate Minecraft bots in the web browser.",
+  "homepage": "https://github.com/Gjum/mc-botsim#readme",
+  "bugs": {
+    "url": "https://github.com/Gjum/mc-botsim/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gjum/mc-botsim.git"
+  },
+  "author": "Gjum",
+  "license": "MPL-2.0",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-scripts": "4.0.2",
+    "web-vitals": "^1.0.1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
