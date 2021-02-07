@@ -12,7 +12,7 @@ export default function WorldView({
   const center = world.players[world.followedPlayerUUID!];
   const view = { screenRange, x: center.x, z: center.z };
 
-  const fontSize = (screenRange * 2) / 32;
+  const fontSize = (screenRange * 2) / 40;
 
   const viewBox = [
     -view.screenRange,
@@ -80,17 +80,30 @@ const PlayerNamesLayer = ({
   <g className="WorldView-playerNames">
     {Object.values(world.players).map(({ uuid, x, z, name }) => {
       return (
-        <text
-          key={uuid}
-          x={x}
-          y={z}
-          dy={-0.5}
-          textAnchor="middle"
-          fontSize={fontSize}
-          fill="white"
-        >
-          {name}
-        </text>
+        <g key={uuid}>
+          <text
+            x={x}
+            y={z}
+            dy={-0.5}
+            textAnchor="middle"
+            fontSize={fontSize}
+            strokeWidth={fontSize * 0.2}
+            stroke="black"
+            fill="black"
+          >
+            {name}
+          </text>
+          <text
+            x={x}
+            y={z}
+            dy={-0.5}
+            textAnchor="middle"
+            fontSize={fontSize}
+            fill="white"
+          >
+            {name}
+          </text>
+        </g>
       );
     })}
   </g>
