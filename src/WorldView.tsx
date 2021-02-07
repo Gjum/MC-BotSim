@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Block, emptyBlock, MATERIAL_AIR } from "./model/Block";
 import { CHUNK_HEIGHT } from "./model/Chunk";
 import { getBlockInWorld, getHeightInWorld, World } from "./model/World";
+import "./WorldView.css";
 
 interface View {
   x: number;
@@ -44,7 +45,7 @@ export default function WorldView({
   }
 
   return (
-    <svg width="100%" height="100%" viewBox={viewBox} onWheel={onWheel}>
+    <svg className="WorldView" viewBox={viewBox} onWheel={onWheel}>
       <g
         className="WorldView-translate-world"
         transform={`translate(${-view.x} ${-view.z})`}
