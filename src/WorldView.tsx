@@ -12,6 +12,8 @@ export default function WorldView({
   const center = world.players[world.followedPlayerUUID!];
   const view = { screenRange, x: center.x, z: center.z };
 
+  const fontSize = (screenRange * 2) / 32;
+
   const viewBox = [
     -view.screenRange,
     -view.screenRange,
@@ -31,6 +33,7 @@ export default function WorldView({
       >
         <BlocksLayer world={world} />
         <PlayersLayer world={world} />
+        <PlayerNamesLayer world={world} fontSize={fontSize} />
       </g>
     </svg>
   );
@@ -62,6 +65,32 @@ const PlayersLayer = ({ world }: { world: World }) => (
             fill="none"
           />
         </React.Fragment>
+      );
+    })}
+  </g>
+);
+
+const PlayerNamesLayer = ({
+  world,
+  fontSize,
+}: {
+  world: World;
+  fontSize: number;
+}) => (
+  <g className="WorldView-playerNames">
+    {Object.values(world.players).map(({ uuid, x, z, name }) => {
+      return (
+        <text
+          key={uuid}
+          x={x}
+          y={z}
+          dy={-0.5}
+          textAnchor="middle"
+          fontSize={fontSize}
+          fill="white"
+        >
+          {name}
+        </text>
       );
     })}
   </g>
