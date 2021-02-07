@@ -1,5 +1,5 @@
 import { Block } from "./Block";
-import { Chunk } from "./Chunk";
+import { Chunk, computeHeights, updateBlockInChunk } from "./Chunk";
 
 export type ChunkAction = {
   cx: number;
@@ -12,8 +12,12 @@ export type ChunkAction = {
   | {
       type: "chunk:update_block";
       x: number;
+      y: number;
       z: number;
       block: Block;
+    }
+  | {
+      type: "chunk:compute_heights";
     }
 );
 
@@ -24,10 +28,11 @@ export function reduceChunk(chunk: Chunk, action: ChunkAction): Chunk {
     case "chunk:update":
       return { ...chunk, ...action.chunk };
     case "chunk:update_block": {
-      const blocks = [...chunk.blocks];
-      const blockNr = (action.x & 0xf) + (action.z & 0xf) * 16;
-      blocks[blockNr] = action.block;
-      return { ...chunk, blocks };
+      const { x, y, z, block } = action;
+      return updateBlockInChunk(chunk, x, y, z, block);
+    }
+    case "chunk:compute_heights": {
+      return { ...chunk, heights: computeHeights(chunk) };
     }
     default:
       return chunk;

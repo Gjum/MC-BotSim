@@ -3,6 +3,8 @@ export interface Block {
   // TODO
 }
 
+export const MATERIAL_AIR = "minecraft:air";
+
 export const emptyBlock: Block = {
-  material: "minecraft:Air",
+  material: MATERIAL_AIR,
 };

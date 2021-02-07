@@ -4,13 +4,14 @@ import { makeEmptyChunk } from "./Chunk";
 import { ChunkAction, reduceChunk } from "./ChunkAction";
 import { makePlayer } from "./Player";
 import { PlayerAction, reducePlayer } from "./PlayerAction";
-import { getKeyForChunk, World } from "./World";
+import { getChunkKey, World } from "./World";
 
 export type WorldAction = WorldOnlyAction | PlayerAction | ChunkAction;
 
 export type WorldOnlyAction = {
   type: "world:update_block";
   x: number;
+  y: number;
   z: number;
   block: Block;
 };
@@ -37,7 +38,7 @@ export function reduceWorld(world: World, action: WorldAction): World {
       ...world,
       chunks: reduceRecordOrCreate(
         world.chunks,
-        getKeyForChunk(action),
+        getChunkKey(action),
         action,
         reduceChunk,
         () => makeEmptyChunk(cx, cz)
@@ -51,6 +52,7 @@ export function reduceWorld(world: World, action: WorldAction): World {
         cx: action.x >> 4,
         cz: action.z >> 4,
         x: action.x,
+        y: action.y,
         z: action.z,
         block: action.block,
       });
