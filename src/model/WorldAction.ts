@@ -1,7 +1,8 @@
-import { reduceRecord, reduceRecordOrCreate } from "./Actions";
+import { reduceRecordOrCreate } from "./Actions";
 import { Block } from "./Block";
 import { makeEmptyChunk } from "./Chunk";
 import { ChunkAction, reduceChunk } from "./ChunkAction";
+import { makePlayer } from "./Player";
 import { PlayerAction, reducePlayer } from "./PlayerAction";
 import { getKeyForChunk, World } from "./World";
 
@@ -17,9 +18,16 @@ export type WorldOnlyAction = {
 export function reduceWorld(world: World, action: WorldAction): World {
   if (action.type.startsWith("player:")) {
     action = action as PlayerAction;
+    const { uuid } = action;
     return {
       ...world,
-      players: reduceRecord(world.players, action.uuid, action, reducePlayer),
+      players: reduceRecordOrCreate(
+        world.players,
+        action.uuid,
+        action,
+        reducePlayer,
+        () => makePlayer(uuid, "ERROR")
+      ),
     };
   }
   if (action.type.startsWith("chunk:")) {
