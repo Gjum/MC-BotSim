@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { World } from "./model/World";
 
 export default function WorldView({
   world,
-  screenRange = 10,
+  screenRange: screenRangeDefault = 10,
 }: {
   world: World;
   screenRange?: number;
 }) {
+  const [screenRange, setScreenRange] = useState(screenRangeDefault);
+
   // TODO if no followed player: center among all entities/chunks
   const center = world.players[world.followedPlayerUUID!];
   const view = { screenRange, x: center.x, z: center.z };
@@ -21,12 +23,13 @@ export default function WorldView({
     2 * view.screenRange,
   ].join(" ");
 
+  function onWheel(e: React.WheelEvent<SVGSVGElement>) {
+    const f = Math.pow(1.1, e.deltaY / 53);
+    if (f) setScreenRange(screenRange * f);
+  }
+
   return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox={viewBox}
-    >
+    <svg width="100%" height="100%" viewBox={viewBox} onWheel={onWheel}>
       <g
         className="WorldView-translate-world"
         transform={`translate(${-view.x} ${-view.z})`}
