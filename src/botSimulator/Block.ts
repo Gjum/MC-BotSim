@@ -1,5 +1,5 @@
 export interface Block {
-  material: string;
+  readonly material: string;
   // TODO
 }
 

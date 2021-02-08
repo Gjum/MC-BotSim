@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { Block, emptyBlock, MATERIAL_AIR } from "./model/Block";
-import { CHUNK_HEIGHT } from "./model/Chunk";
-import { getBlockInWorld, getHeightInWorld, World } from "./model/World";
+import React, { useEffect, useState } from "react";
+import { Player } from "./bot/Bot";
+import { Block, emptyBlock, MATERIAL_AIR } from "./botSimulator/Block";
+import { Chunk, CHUNK_HEIGHT } from "./botSimulator/Chunk";
+import { World } from "./botSimulator/World";
 import "./WorldView.css";
 
 interface View {
@@ -11,6 +12,15 @@ interface View {
   topY: number;
 }
 
+export function useChange(onChange: (handler: () => void) => () => void) {
+  const [stateId, setStateId] = useState(1);
+  useEffect(() =>
+    onChange(() => {
+      setStateId(stateId + 1);
+    })
+  );
+}
+
 export default function WorldView({
   world,
   screenRange: screenRangeDefault = 10,
@@ -18,8 +28,10 @@ export default function WorldView({
   world: World;
   screenRange?: number;
 }) {
+  useChange((h) => world.onChange(h));
+
   // TODO if no followed player: center among all entities/chunks
-  const center = world.players[world.followedPlayerUUID!];
+  const center = world.getBotByUUID(world.followedPlayerUUID!)!.position;
 
   const [screenRange, setScreenRange] = useState(screenRangeDefault);
 
@@ -51,24 +63,24 @@ export default function WorldView({
         transform={`translate(${-view.x} ${-view.z})`}
       >
         <BlocksLayer world={world} view={view} />
-        <PlayersLayer world={world} />
-        <PlayerNamesLayer world={world} fontSize={fontSize} />
+        <PlayersLayer players={world.getPlayers()} />
+        <PlayerNamesLayer players={world.getPlayers()} fontSize={fontSize} />
       </g>
     </svg>
   );
 }
 
-const PlayersLayer = ({ world }: { world: World }) => (
+const PlayersLayer = ({ players }: { players: Player[] }) => (
   <g className="WorldView-players">
-    {Object.values(world.players).map(({ uuid, x, z, yaw }) => {
+    {players.map(({ uuid, position, look }) => {
       const r = 0.3;
-      const x2 = x - r * Math.sin(yaw);
-      const z2 = z + r * Math.cos(yaw);
+      const x2 = position.x - r * Math.sin(look.yaw);
+      const z2 = position.z + r * Math.cos(look.yaw);
       return (
         <React.Fragment key={uuid}>
           <line
-            x1={x}
-            y1={z}
+            x1={position.x}
+            y1={position.z}
             x2={x2}
             y2={z2}
             stroke="red"
@@ -76,8 +88,8 @@ const PlayersLayer = ({ world }: { world: World }) => (
             strokeLinecap="round"
           />
           <circle
-            cx={x}
-            cy={z}
+            cx={position.x}
+            cy={position.z}
             r={r}
             stroke="red"
             strokeWidth={0.1}
@@ -90,19 +102,19 @@ const PlayersLayer = ({ world }: { world: World }) => (
 );
 
 const PlayerNamesLayer = ({
-  world,
+  players,
   fontSize,
 }: {
-  world: World;
+  players: Player[];
   fontSize: number;
 }) => (
   <g className="WorldView-playerNames">
-    {Object.values(world.players).map(({ uuid, x, z, name }) => {
+    {players.map(({ uuid, name, position }) => {
       return (
         <g key={uuid}>
           <text
-            x={x}
-            y={z}
+            x={position.x}
+            y={position.z}
             dy={-0.5}
             textAnchor="middle"
             fontSize={fontSize}
@@ -113,8 +125,8 @@ const PlayerNamesLayer = ({
             {name}
           </text>
           <text
-            x={x}
-            y={z}
+            x={position.x}
+            y={position.z}
             dy={-0.5}
             textAnchor="middle"
             fontSize={fontSize}
@@ -147,13 +159,18 @@ const sideDeltasXZ = [
 function computeVisibleBlockFaces(world: World, view: View) {
   const blockFacesByY: Record<number, BlockFace[]> = {};
 
-  const cxs = Object.values(world.chunks).map((c) => c.cx);
+  // XXX get world extent properly
+  const cxs = (Object.values((world as any).chunks) as Chunk[]).map(
+    (c) => c.cx
+  );
   const xMin = Math.max(Math.floor(view.x - view.range), 16 * Math.min(...cxs));
   const xMax = Math.min(
     Math.floor(view.x + view.range),
     16 * Math.max(...cxs) + 15
   );
-  const czs = Object.values(world.chunks).map((c) => c.cz);
+  const czs = (Object.values((world as any).chunks) as Chunk[]).map(
+    (c) => c.cz
+  );
   const zMin = Math.max(Math.floor(view.z - view.range), 16 * Math.min(...czs));
   const zMax = Math.min(
     Math.floor(view.z + view.range),
@@ -162,12 +179,12 @@ function computeVisibleBlockFaces(world: World, view: View) {
 
   for (let z = zMin; z <= zMax; ++z) {
     for (let x = xMin; x <= xMax; ++x) {
-      let topY = getHeightInWorld(world, x, z);
-      if (topY === null || topY === undefined) topY = CHUNK_HEIGHT;
+      let topY = world.getHeight(x, z);
+      if (topY === null) continue; // unloaded chunk
       if (topY > view.topY) topY = view.topY;
       let aboveBlock = emptyBlock;
       for (let y = topY; y >= 0; --y) {
-        const block = getBlockInWorld(world, x, y, z) || emptyBlock;
+        const block = world.getBlock(x, y, z) || emptyBlock;
         if (block.material !== MATERIAL_AIR) {
           if (aboveBlock.material === MATERIAL_AIR) {
             const sliceTop =
@@ -177,7 +194,7 @@ function computeVisibleBlockFaces(world: World, view: View) {
           const sides: BlockFace[] = [];
           for (const [dx, dz] of sideDeltasXZ) {
             const adjacentBlock =
-              getBlockInWorld(world, x + dx, y, z + dz) || emptyBlock;
+              world.getBlock(x + dx, y, z + dz) || emptyBlock;
             if (adjacentBlock.material === MATERIAL_AIR) {
               sides.push({ block, x, y, z, dx, dz });
             }

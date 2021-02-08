@@ -1,16 +1,12 @@
-import { useReducer } from "react";
+import { useMemo } from "react";
 import "./App.css";
-import { makePlayer } from "./model/Player";
-import { emptyWorld, World } from "./model/World";
-import { reduceWorld, WorldAction, WorldOnlyAction } from "./model/WorldAction";
+import Vec3 from "./bot/Vec3";
+import { BotSim } from "./botSimulator/BotSim";
+import { World } from "./botSimulator/World";
 import WorldView from "./WorldView";
 
 export default function App() {
-  const [world, dispatchWorld] = useReducer(
-    reduceWorld,
-    emptyWorld,
-    makeExampleWorld
-  );
+  const world = useMemo(() => makeExampleWorld(exampleMapStrs), []);
 
   return (
     <div className="App">
@@ -33,39 +29,28 @@ const materialShorthands: Record<string, string> = {
   a: "minecraft:grass",
 };
 
-const makeExampleWorld = () =>
-  ([
-    ...convertMapStrsToBlockUpdates(exampleMapStrs),
-    { type: "chunk:compute_heights", cx: -1, cz: -1 },
-    { type: "chunk:compute_heights", cx: -1, cz: 0 },
-    { type: "chunk:compute_heights", cx: 0, cz: -1 },
-    { type: "chunk:compute_heights", cx: 0, cz: 0 },
-  ] as WorldAction[]).reduce<World>((s, a) => reduceWorld(s, a), {
-    followedPlayerUUID: "42",
-    players: {
-      "42": { ...makePlayer("42", "Bot"), x: 0.5, z: 0.5 },
-    },
-    chunks: {},
-  });
+function makeExampleWorld(mapStrs: string[]) {
+  const world = new World();
 
-function convertMapStrsToBlockUpdates(mapStrs: string[]): WorldOnlyAction[] {
+  setBlocksFromMap(world, mapStrs);
+
+  const bot = new BotSim(world, { uuid: "42", name: "Bot" });
+  bot.position = new Vec3(0.5, 1, 0.5);
+  world.followedPlayerUUID = "42";
+
+  return world;
+}
+
+function setBlocksFromMap(world: World, mapStrs: string[]) {
   const x0 = -Math.floor(mapStrs[0].split(" ").length / 2);
   const z0 = -Math.floor(mapStrs.length / 2);
-  return mapStrs.flatMap((r, zi) =>
-    r.split(" ").flatMap((s, xi) => {
+  mapStrs.forEach((r, zi) =>
+    r.split(" ").forEach((s, xi) => {
       const height = +s[0];
       const material = materialShorthands[s[1]];
-      const arr: WorldOnlyAction[] = [];
-      for (let y = 0; y <= height; y++) {
-        arr.push({
-          type: "world:update_block",
-          x: x0 + xi,
-          y,
-          z: z0 + zi,
-          block: { material },
-        });
+      for (let y = 0; y < height; y++) {
+        world.setBlock(x0 + xi, y, z0 + zi, { material });
       }
-      return arr;
     })
   );
 }
