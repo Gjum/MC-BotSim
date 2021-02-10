@@ -21,9 +21,11 @@ export function useChange(onChange: (handler: () => void) => () => void) {
   );
 }
 
+const scrollStep = 53;
+
 export default function WorldView({
   world,
-  screenRange: screenRangeDefault = 5,
+  screenRange: screenRangeDefault = 3,
 }: {
   world: World;
   screenRange?: number;
@@ -42,7 +44,7 @@ export default function WorldView({
     topY: CHUNK_HEIGHT,
   };
 
-  const fontSize = (screenRange * 2) / 48;
+  const fontSize = (screenRange * 2) / 24;
 
   const viewBox = [
     -screenRange,
@@ -52,7 +54,7 @@ export default function WorldView({
   ].join(" ");
 
   function onWheel(e: React.WheelEvent<SVGSVGElement>) {
-    const f = Math.pow(1.1, e.deltaY / 53);
+    const f = Math.pow(1.1, e.deltaY / scrollStep);
     if (f) setScreenRange(screenRange * f);
   }
 
