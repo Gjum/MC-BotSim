@@ -23,7 +23,7 @@ export function useChange(onChange: (handler: () => void) => () => void) {
 
 export default function WorldView({
   world,
-  screenRange: screenRangeDefault = 10,
+  screenRange: screenRangeDefault = 5,
 }: {
   world: World;
   screenRange?: number;
@@ -42,7 +42,7 @@ export default function WorldView({
     topY: CHUNK_HEIGHT,
   };
 
-  const fontSize = (screenRange * 2) / 40;
+  const fontSize = (screenRange * 2) / 48;
 
   const viewBox = [
     -screenRange,
@@ -57,7 +57,13 @@ export default function WorldView({
   }
 
   return (
-    <svg className="WorldView" viewBox={viewBox} onWheel={onWheel}>
+    <svg
+      className="WorldView"
+      viewBox={viewBox}
+      width="100%"
+      height="100%"
+      onWheel={onWheel}
+    >
       <g
         className="WorldView-translate-world"
         transform={`translate(${-view.x} ${-view.z})`}

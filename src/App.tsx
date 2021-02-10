@@ -1,3 +1,4 @@
+import MonacoEditor from "@monaco-editor/react";
 import { useMemo } from "react";
 import "./App.css";
 import Vec3 from "./bot/Vec3";
@@ -10,10 +11,40 @@ export default function App() {
 
   return (
     <div className="App">
-      <WorldView {...{ world }} />
+      <ScriptEditor />
+      <div className="App-world">
+        <WorldView {...{ world }} />
+      </div>
     </div>
   );
 }
+
+function ScriptEditor() {
+  return (
+    <div className="App-editor">
+      <MonacoEditor
+        height="100%"
+        theme="vs-dark"
+        defaultLanguage="typescript"
+        value={exampleScript}
+        onChange={console.log}
+        options={{
+          minimap: { enabled: false },
+          wordWrap: "on",
+        }}
+      />
+    </div>
+  );
+}
+
+const exampleScript = `
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+console.log("Hello world!");
+export interface Test {}
+async function main() {
+  sdffd
+}
+`.trim();
 
 const exampleMapStrs = [
   "1s 1s 3s 3s 3s",

@@ -1,4 +1,8 @@
-body {
+html,
+body,
+#root {
+  height: 100vh;
   margin: 0;
-  background-color: black;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
 }
