@@ -69,6 +69,8 @@ function makeExampleWorld(mapStrs: string[]) {
   bot.position = new Vec3(0.5, 1, 0.5);
   world.followedPlayerUUID = "42";
 
+  setInterval(() => world.doTick(), 1000);
+
   return world;
 }
 

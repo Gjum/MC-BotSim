@@ -1,6 +1,7 @@
 import { Bot, ChatMsg } from "./Bot";
 import { CancelToken } from "./CancelToken";
 import { Vec3 } from "./Vec3";
+import { McWindow } from "./Window";
 
 export async function sleepTicks(
   bot: Bot,
@@ -30,14 +31,33 @@ export async function digBlock(
   }
 }
 
+/** Open a container window at block `position` and use it while it is open. */
+export async function withContainerOpen<T>(
+  bot: Bot,
+  position: Vec3,
+  fn: (container: McWindow, cancelToken: CancelToken) => Promise<T>
+): Promise<T> {
+  throw new Error("Method not implemented.");
+}
+
+async function waitForChat(
+  filter?: (text: string, chat: ChatMsg) => boolean
+): Promise<{ text: string; chat: ChatMsg }> {
+  throw new Error("Method not implemented.");
+}
+
 export const allHelpers = {
   digBlock,
   sleepTicks,
+  waitForChat,
+  withContainerOpen,
 };
 
 export interface BotWithHelpers extends Bot {
   digBlock: typeof digBlock;
   sleepTicks: typeof sleepTicks;
+  waitForChat: typeof waitForChat;
+  withContainerOpen: typeof withContainerOpen;
 }
 
 export function addHelpersToBot(bot: Bot): BotWithHelpers {
