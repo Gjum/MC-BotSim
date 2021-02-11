@@ -1,4 +1,4 @@
-/** @param {import("../bot/Environment").Environment} env */
+/** @param {import("../api/Environment").Environment} env */
 module.exports = async function (env) {
   const { Vec3 } = env;
 

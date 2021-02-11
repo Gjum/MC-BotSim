@@ -1,8 +1,9 @@
+import { UUID } from "./Bot";
 import { BotWithHelpers } from "./botHelpers";
 import { Vec3 } from "./Vec3";
 
 export type MCCredentials =
-  | { name: string } // offline mode
+  | { name: string; uuid?: UUID } // offline mode
   | { login: string; password: string }; // authenticated
 
 export type BotOptions = MCCredentials & {
@@ -11,7 +12,7 @@ export type BotOptions = MCCredentials & {
 };
 
 /**
- * Environment that can create bots.
+ * An environment that can create bots.
  * May be a simulator, a Mineflayer bot, or something else.
  */
 export interface Environment {

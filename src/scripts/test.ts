@@ -1,4 +1,4 @@
-import { Environment } from "../bot/Environment";
+import { Environment } from "../api/Environment";
 
 export default async function (env: Environment) {
   const { Vec3 } = env;

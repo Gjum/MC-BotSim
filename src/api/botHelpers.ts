@@ -60,11 +60,11 @@ export interface BotWithHelpers extends Bot {
   withContainerOpen: typeof withContainerOpen;
 }
 
-export function addHelpersToBot(bot: Bot): BotWithHelpers {
-  const helpers: any = {};
+export function addHelpersToBot<T extends Bot>(bot: T): BotWithHelpers & T {
   for (const [name, helper] of Object.entries(allHelpers)) {
     //@ts-ignore
-    helpers[name] = (...args) => helper(bot, ...args);
+    bot[name] = (...args) => helper(bot, ...args);
   }
-  return Object.assign(bot, helpers);
+  //@ts-ignore
+  return bot;
 }

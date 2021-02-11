@@ -22,7 +22,7 @@ const apiFiles = [
   "Vec3.ts",
   "Window.ts",
 ];
-const readApiFile = (fileName: string) => raw(`./bot/${fileName}`);
+const readApiFile = (fileName: string) => raw(`./api/${fileName}`);
 
 const file = exampleTs;
 
@@ -57,7 +57,7 @@ function addLibs(monaco: Monaco) {
   } = monaco.languages.typescript;
   for (const fileName of apiFiles) {
     const content = readApiFile(fileName);
-    const filePath = `../bot/${fileName}`;
+    const filePath = `../api/${fileName}`;
     javascriptDefaults.addExtraLib(content, filePath);
     typescriptDefaults.addExtraLib(content, filePath);
   }

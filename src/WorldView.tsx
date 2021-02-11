@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Player } from "./bot/Bot";
+import React, { useCallback, useEffect, useState } from "react";
+import { Player } from "./api/Bot";
 import { Block, emptyBlock, MATERIAL_AIR } from "./botSimulator/Block";
 import { Chunk, CHUNK_HEIGHT } from "./botSimulator/Chunk";
 import { World } from "./botSimulator/World";
@@ -14,10 +14,12 @@ interface View {
 
 export function useChange(onChange: (handler: () => void) => () => void) {
   const [stateId, setStateId] = useState(1);
-  useEffect(() =>
-    onChange(() => {
-      setStateId(stateId + 1);
-    })
+  useEffect(
+    () =>
+      onChange(() => {
+        setStateId(stateId + 1);
+      }),
+    [onChange]
   );
 }
 
@@ -30,7 +32,7 @@ export default function WorldView({
   world: World;
   screenRange?: number;
 }) {
-  useChange((h) => world.onChange(h));
+  useChange(useCallback((h) => world.onChange(h), [world]));
 
   // TODO if no followed player: center among all entities/chunks
   const center = world.getBotByUUID(world.followedPlayerUUID!)!.position;

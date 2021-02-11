@@ -1,5 +1,5 @@
+import { Bot, Player, UUID } from "../api/Bot";
 import { Block } from "./Block";
-import { Bot, Player, UUID } from "../bot/Bot";
 import { Chunk } from "./Chunk";
 import { doEventHandler, emitEventTo, RunLater } from "../util";
 

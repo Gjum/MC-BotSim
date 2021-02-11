@@ -1,6 +1,6 @@
 import { useMemo } from "react";
+import Vec3 from "./api/Vec3";
 import "./App.css";
-import Vec3 from "./bot/Vec3";
 import { BotSim } from "./botSimulator/BotSim";
 import { World } from "./botSimulator/World";
 import { ScriptEditor } from "./ScriptEditor";

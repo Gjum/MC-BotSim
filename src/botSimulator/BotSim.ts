@@ -1,9 +1,9 @@
 import EventEmitter from "events";
-import { Bot, Control, Hand, UUID } from "../bot/Bot";
-import { CancelToken } from "../bot/CancelToken";
-import Look from "../bot/Look";
-import Vec3 from "../bot/Vec3";
-import { McWindow } from "../bot/Window";
+import { Bot, Control, Hand, UUID } from "../api/Bot";
+import { CancelToken } from "../api/CancelToken";
+import Look from "../api/Look";
+import Vec3 from "../api/Vec3";
+import { McWindow } from "../api/Window";
 import { World } from "./World";
 import { definedOr } from "../util";
 
