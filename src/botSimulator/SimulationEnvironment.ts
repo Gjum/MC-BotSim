@@ -8,6 +8,9 @@ import { World } from "./World";
 type SimulationState = "stopped" | "running";
 
 export class SimulationEnvironment implements Environment {
+  script: string;
+  error?: Error;
+
   world = new World();
 
   readonly tps = 20;
@@ -20,6 +23,35 @@ export class SimulationEnvironment implements Environment {
 
   private changeEvent = new EventSystem<void>();
   readonly onEachChange = this.changeEvent.onEach;
+
+  constructor(script: string) {
+    this.script = script; // to satisfy type check
+    this.setScript(script);
+  }
+
+  /** Restart the simulation with that bot script. */
+  setScript(script: string) {
+    this.script = script;
+    try {
+      /** this gets passed into the script */
+      const scriptModule = { exports: undefined as any };
+      // execute the script. doesn't start the contained function though
+      Function("module", script)(scriptModule);
+      // execute the function contained in the script
+      const result = scriptModule.exports(this);
+      if (result.catch)
+        result.catch((err: any) => {
+          this.scriptError(err);
+        });
+    } catch (err) {
+      this.scriptError(err);
+    }
+  }
+
+  private scriptError(error: Error) {
+    this.error = error;
+    this.changeEvent.emit();
+  }
 
   async makeBot(
     gameAddress: string,

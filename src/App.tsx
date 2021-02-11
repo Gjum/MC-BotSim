@@ -1,16 +1,23 @@
 import raw from "raw.macro";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UUID } from "./api/Bot";
 import "./App.css";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
 import { useOnChange, usePromise } from "./hooks";
-import { EditorFile, ScriptEditor } from "./ScriptEditor";
-import runInCircles from "./scripts/runInCircles";
+import { ScriptEditor } from "./ScriptEditor";
 import WorldView from "./WorldView";
 
+const exampleScript = raw("./scripts/test.js");
+
 export default function App() {
-  const { value: simulator } = usePromise(() => makeExampleSimulator());
+  const [script, setScript] = useState(exampleScript);
+
+  const simulator = useMemo(() => {
+    const simulator = new SimulationEnvironment(script);
+    setBlocksFromMap(simulator.world, exampleMapStrs);
+    return simulator;
+  }, [script]);
 
   const [followedPlayerUUID, followPlayer] = useState<UUID>();
   useEffect(() => {
@@ -26,17 +33,16 @@ export default function App() {
   }, [simulator, followPlayer]);
 
   if (!simulator) {
-    return (
-      <div className="App" style={styleCentered}>
-        Loading simulator ...
-      </div>
-    );
+    return <div className="App centering">Loading simulator ...</div>;
   }
 
   return (
     <div className="App">
       <div className="App-editor">
-        <ScriptEditor file={exampleRunInCircles} />
+        <ScriptEditor
+          script={script}
+          onChange={(content) => setScript(content || "")}
+        />
       </div>
       <div className="App-controls">
         <Controls simulator={simulator} />
@@ -51,14 +57,19 @@ export default function App() {
   );
 }
 
-const styleCentered = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-};
-
 export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
   useOnChange(simulator);
+
+  if (simulator.error) {
+    return (
+      <div
+        className="Controls centering"
+        style={{ padding: ".5em", color: "red" }}
+      >
+        Error: {String(simulator.error)}
+      </div>
+    );
+  }
 
   function runClicked() {
     simulator.startTicking();
@@ -71,7 +82,7 @@ export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
   }
 
   return (
-    <div style={{ ...styleCentered, margin: ".5em" }}>
+    <div className="Controls centering" style={{ padding: ".5em" }}>
       <button onClick={runClicked} disabled={simulator.state === "running"}>
         Start
       </button>
@@ -97,13 +108,6 @@ const materialShorthands: Record<string, string> = {
   a: "minecraft:grass",
 };
 
-async function makeExampleSimulator() {
-  const sim = new SimulationEnvironment();
-  setBlocksFromMap(sim.world, exampleMapStrs);
-  runInCircles(sim);
-  return sim;
-}
-
 function setBlocksFromMap(world: World, mapStrs: string[]) {
   const x0 = -Math.floor(mapStrs[0].split(" ").length / 2);
   const z0 = -Math.floor(mapStrs.length / 2);
@@ -117,19 +121,3 @@ function setBlocksFromMap(world: World, mapStrs: string[]) {
     })
   );
 }
-
-const exampleJs: EditorFile = {
-  content: raw("./scripts/test.js"),
-  path: "./scripts/test.js",
-  language: "javascript",
-};
-const exampleTs: EditorFile = {
-  content: raw("./scripts/test.ts"),
-  path: "./scripts/test.ts",
-  language: "typescript",
-};
-const exampleRunInCircles: EditorFile = {
-  content: raw("./scripts/runInCircles.ts"),
-  path: "./scripts/runInCircles.ts",
-  language: "typescript",
-};
