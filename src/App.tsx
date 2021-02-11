@@ -1,17 +1,13 @@
-import Look from "./api/Look";
-import Vec3 from "./api/Vec3";
 import "./App.css";
-import { BotSim } from "./botSimulator/BotSim";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
 import { useOnChange, usePromise } from "./hooks";
 import { ScriptEditor } from "./ScriptEditor";
+import runInCircles from "./scripts/runInCircles";
 import WorldView from "./WorldView";
 
 export default function App() {
-  const { value: simulator } = usePromise(() =>
-    makeExampleSimulator(exampleMapStrs)
-  );
+  const { value: simulator } = usePromise(() => makeExampleSimulator());
 
   if (!simulator)
     return (
@@ -81,20 +77,10 @@ const materialShorthands: Record<string, string> = {
   a: "minecraft:grass",
 };
 
-async function makeExampleSimulator(mapStrs: string[]) {
+async function makeExampleSimulator() {
   const sim = new SimulationEnvironment();
-  const world = sim.world;
-
-  setBlocksFromMap(world, mapStrs);
-
-  const bot: BotSim = await sim.makeBot("", { uuid: "42", name: "Bot" });
-  world.followedPlayerUUID = bot.uuid;
-  bot.position = new Vec3(0.5, 1, 0.5);
-  bot.look = Look.fromDegrees(-45, 0);
-  bot.setControlState("forward", true);
-
-  world.onEachTick((tick) => console.log(`World tick`, tick));
-
+  setBlocksFromMap(sim.world, exampleMapStrs);
+  runInCircles(sim);
   return sim;
 }
 

@@ -28,6 +28,10 @@ export class SimulationEnvironment implements Environment {
     // TODO when offline mode, get UUID for name
     const optionsSim = { name: "Bot", uuid: "42", ...options };
     const bot = new BotSim(this.world, optionsSim);
+    bot.position = new Vec3(0.5, 1, 0.5);
+
+    this.world.followedPlayerUUID = bot.uuid;
+
     const botWithHelpers = addHelpersToBot(bot);
     return botWithHelpers;
   }
