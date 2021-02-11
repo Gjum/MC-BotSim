@@ -1,5 +1,6 @@
-/** @param {import("../bot/Environment").Environment} env */
-module.exports = async function (env) {
+import { Environment } from "../bot/Environment";
+
+export default async function (env: Environment) {
   const { Vec3 } = env;
 
   const bot = await env.makeBot("localhost", { name: "Bot" });
@@ -14,4 +15,4 @@ module.exports = async function (env) {
   } finally {
     bot.setControlState("forward", false);
   }
-};
+}

@@ -29,6 +29,7 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "monaco-editor": "^0.22.3",
+    "raw.macro": "^0.4.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.2",
