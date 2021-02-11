@@ -20,6 +20,7 @@ export interface Bot extends Player {
   readonly uuid: UUID;
   autoReconnect: boolean;
 
+  readonly connectionStatus: ConnectionStatus;
   readonly position: Vec3;
   readonly look: Look;
   readonly health: number;
@@ -32,6 +33,8 @@ export interface Bot extends Player {
   /** null while a window is being opened (no window to interact with) */
   readonly window: McWindow | null;
 
+  /** Connect to `gameAddress`. To connect to a different address, create a new Bot. */
+  connect(cancelToken?: CancelToken): Promise<void>;
   close(): void;
 
   /** distance feet-eyes */
@@ -61,6 +64,13 @@ export interface Bot extends Player {
 }
 
 export type UUID = string;
+
+export type ConnectionStatus =
+  | "offline"
+  | "connecting"
+  | "online"
+  | "kicked"
+  | "error";
 
 export type Hand = "left" | "right";
 

@@ -1,11 +1,11 @@
-import EventEmitter from "events";
-import { Bot, Control, Hand, UUID } from "../api/Bot";
+import { Bot, ConnectionStatus, Control, Hand, UUID } from "../api/Bot";
 import { CancelToken } from "../api/CancelToken";
 import Look from "../api/Look";
 import Vec3 from "../api/Vec3";
 import { McWindow } from "../api/Window";
 import { World } from "./World";
 import { definedOr } from "../util";
+import { EventSystem } from "../EventSystem";
 
 export type BotSimOptions = {
   name: string;
@@ -20,6 +20,7 @@ export class BotSim implements Bot {
   uuid: UUID;
   autoReconnect: boolean;
 
+  connectionStatus: ConnectionStatus = "offline";
   position = new Vec3(0, 0, 0);
   look = new Look(0, 0);
   health = 0;
@@ -31,7 +32,9 @@ export class BotSim implements Bot {
   controlState = {} as Record<Control, boolean>;
   movementSpeed = 0.1; // meters per tick
 
-  events = new EventEmitter();
+  private conectionStatusEvent = new EventSystem<ConnectionStatus>();
+  readonly onEachConnectionChange = this.conectionStatusEvent.onEach;
+  readonly onNextConnectionChange = this.conectionStatusEvent.onNext;
 
   unregisterPhysics: () => void;
 
@@ -59,6 +62,20 @@ export class BotSim implements Bot {
     // XXX do other physics: falling, collision
     this.position = this.position.plus(velocity);
     this.world.notifyChildChanged(this);
+  }
+
+  async connect(cancelToken?: CancelToken) {
+    if (this.connectionStatus === "online") return;
+    if (this.connectionStatus === "connecting") return;
+    this.connectionStatus = "connecting";
+    this.conectionStatusEvent.emit(this.connectionStatus);
+    // in this simulation we connect really quickly, and never fail
+    setImmediate(() => {
+      this.connectionStatus = "online";
+      this.conectionStatusEvent.emit(this.connectionStatus);
+    });
+
+    return await this.waitJoinGame(cancelToken);
   }
 
   close() {
@@ -134,7 +151,24 @@ export class BotSim implements Bot {
   }
 
   async waitJoinGame(cancelToken?: CancelToken): Promise<void> {
-    throw new Error("Method not implemented."); // TODO
+    if (this.connectionStatus === "online") return;
+    this.connect();
+    let rmCancel: undefined | (() => void) = undefined;
+    let rmEvent: undefined | (() => void) = undefined;
+    try {
+      return await new Promise<void>((resolve, reject) => {
+        if (cancelToken) rmCancel = cancelToken.onCancel(reject);
+        rmEvent = this.onEachConnectionChange((status) => {
+          if (status === "online") resolve();
+          else if (status === "offline") this.connect();
+          else if (status !== "connecting")
+            reject(new Error(`Connection failed: ${status}`));
+        });
+      });
+    } finally {
+      if (rmCancel) rmCancel!();
+      if (rmEvent) rmEvent!();
+    }
   }
 
   async waitNextPhysicsSend(cancelToken?: CancelToken): Promise<void> {
