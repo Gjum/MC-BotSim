@@ -1,17 +1,6 @@
 import MonacoEditor, { Monaco } from "@monaco-editor/react";
 import raw from "raw.macro";
 
-const exampleJs = {
-  content: raw("./scripts/test.js"),
-  path: "./scripts/test.js",
-  language: "javascript",
-};
-const exampleTs = {
-  content: raw("./scripts/test.ts"),
-  path: "./scripts/test.ts",
-  language: "typescript",
-};
-
 /** All files under ./bot/ to be loaded into the editor (`addExtraLib`). */
 const apiFiles = [
   "Bot.ts",
@@ -24,9 +13,13 @@ const apiFiles = [
 ];
 const readApiFile = (fileName: string) => raw(`./api/${fileName}`);
 
-const file = exampleTs;
+export interface EditorFile {
+  content: string;
+  path: string;
+  language: "javascript" | "typescript" | "python" | "lua";
+}
 
-export function ScriptEditor() {
+export function ScriptEditor({ file }: { file: EditorFile }) {
   return (
     <MonacoEditor
       height="100%"

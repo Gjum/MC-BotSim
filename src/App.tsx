@@ -1,10 +1,11 @@
+import raw from "raw.macro";
 import { useEffect, useState } from "react";
 import { UUID } from "./api/Bot";
 import "./App.css";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
 import { useOnChange, usePromise } from "./hooks";
-import { ScriptEditor } from "./ScriptEditor";
+import { EditorFile, ScriptEditor } from "./ScriptEditor";
 import runInCircles from "./scripts/runInCircles";
 import WorldView from "./WorldView";
 
@@ -34,7 +35,7 @@ export default function App() {
   return (
     <div className="App">
       <div className="App-editor">
-        <ScriptEditor />
+        <ScriptEditor file={exampleRunInCircles} />
       </div>
       <div className="App-controls">
         <Controls simulator={simulator} />
@@ -115,3 +116,19 @@ function setBlocksFromMap(world: World, mapStrs: string[]) {
     })
   );
 }
+
+const exampleJs: EditorFile = {
+  content: raw("./scripts/test.js"),
+  path: "./scripts/test.js",
+  language: "javascript",
+};
+const exampleTs: EditorFile = {
+  content: raw("./scripts/test.ts"),
+  path: "./scripts/test.ts",
+  language: "typescript",
+};
+const exampleRunInCircles: EditorFile = {
+  content: raw("./scripts/runInCircles.ts"),
+  path: "./scripts/runInCircles.ts",
+  language: "typescript",
+};
