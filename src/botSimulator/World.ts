@@ -1,13 +1,21 @@
 import { Bot, Player, UUID } from "../api/Bot";
 import { Block } from "./Block";
 import { Chunk } from "./Chunk";
-import { doEventHandler, emitEventTo, RunLater } from "../util";
+import { EventSystem, EventSystemLater } from "../util";
 
 export class World {
   private bots: Record<UUID, Bot> = {};
   private chunks: Record<ChunkKey, Chunk> = {};
   private players: Record<UUID, Player> = {};
   followedPlayerUUID?: UUID;
+
+  private changeEvent = new EventSystemLater();
+  readonly onEachChange = this.changeEvent.onEach;
+  readonly onNextChange = this.changeEvent.onNext;
+
+  private tickEvent = new EventSystem<number>();
+  readonly onEachTick = this.tickEvent.onEach;
+  readonly onNextTick = this.tickEvent.onNext;
 
   /** this includes bots */
   getPlayers() {
@@ -28,7 +36,7 @@ export class World {
     }
     this.bots[bot.uuid] = bot;
     this.players[bot.uuid] = bot;
-    this.changeEmitter.runLater();
+    this.changeEvent.emitLater();
   }
 
   unregisterBot(bot: Bot) {
@@ -38,7 +46,11 @@ export class World {
     }
     delete this.bots[bot.uuid];
     delete this.players[bot.uuid];
-    this.changeEmitter.runLater();
+    this.changeEvent.emitLater();
+  }
+
+  notifyChildChanged(child: any) {
+    this.changeEvent.emitLater();
   }
 
   /** null means unloaded chunk or outside the world */
@@ -57,7 +69,7 @@ export class World {
     const chunkKey = getChunkKey({ cx, cz });
     let chunk = this.chunks[chunkKey];
     if (!chunk) chunk = this.chunks[chunkKey] = new Chunk(cx, cz);
-    this.changeEmitter.runLater();
+    this.changeEvent.emitLater();
     return chunk.setBlock(x, y, z, block);
   }
 
@@ -77,36 +89,11 @@ export class World {
   }
 
   doTick() {
-    // game tick increasing does not emit a change event
+    // game tick increasing does not emit a change event,
+    // but the tick listeners may emit a change event through `notifyChildChanged`
     ++this.gameTick;
-
-    // run "each" handlers first, to do "background" work
-    // run "next" handlers last, to handle "background" changes
-    emitEventTo(this.gameTick, this.tickEachHandlers, this.tickNextHandlers);
+    this.tickEvent.emit(this.gameTick);
   }
-
-  // TODO restructure events api: changeEvent.{onNext,onEach,_emit}
-
-  private nextHandlerId = 1;
-
-  private changeHandlers: Record<number, () => void> = {};
-  private changeEmitter = new RunLater(() =>
-    emitEventTo(this, this.changeHandlers)
-  );
-  onEachChange = (handler: () => void) => {
-    return doEventHandler(this.changeHandlers, ++this.nextHandlerId, handler);
-  };
-
-  private tickEachHandlers: Record<number, TickHandler> = {};
-  onEachTick = (handler: TickHandler) => {
-    return doEventHandler(this.tickEachHandlers, ++this.nextHandlerId, handler);
-  };
-
-  private tickNextHandlers: Record<number, TickHandler> = {};
-  onNextTick = (handler: TickHandler) => {
-    doEventHandler(this.tickNextHandlers, ++this.nextHandlerId, handler);
-    this.tickNextHandlers = {};
-  };
 }
 
 export type TickHandler = (tick: number) => void;

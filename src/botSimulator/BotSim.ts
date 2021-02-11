@@ -58,6 +58,7 @@ export class BotSim implements Bot {
     }
     // XXX do other physics: falling, collision
     this.position = this.position.plus(velocity);
+    this.world.notifyChildChanged(this);
   }
 
   close() {
