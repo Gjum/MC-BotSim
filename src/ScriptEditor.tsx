@@ -44,14 +44,21 @@ export function ScriptEditor({ file }: { file: EditorFile }) {
 }
 
 function addLibs(monaco: Monaco) {
-  const {
-    javascriptDefaults,
-    typescriptDefaults,
-  } = monaco.languages.typescript;
+  const { javascriptDefaults } = monaco.languages.typescript;
+  javascriptDefaults.setCompilerOptions({
+    allowJs: true,
+    strict: true,
+  });
   for (const fileName of apiFiles) {
     const content = readApiFile(fileName);
-    const filePath = `../api/${fileName}`;
+    const filePath = `file:///api/${fileName}`;
     javascriptDefaults.addExtraLib(content, filePath);
-    typescriptDefaults.addExtraLib(content, filePath);
+    // When resolving definitions and references, the editor will try to use created models.
+    // Creating a model for the library allows "peek definition/references" commands to work with the library.
+    monaco.editor.createModel(
+      content,
+      "typescript",
+      monaco.Uri.parse(filePath)
+    );
   }
 }

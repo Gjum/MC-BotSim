@@ -25,12 +25,13 @@ export default function App() {
     }
   }, [simulator, followPlayer]);
 
-  if (!simulator)
+  if (!simulator) {
     return (
       <div className="App" style={styleCentered}>
         Loading simulator ...
       </div>
     );
+  }
 
   return (
     <div className="App">
