@@ -1,8 +1,8 @@
 import { addHelpersToBot, BotWithHelpers } from "../api/botHelpers";
 import { BotOptions, Environment } from "../api/Environment";
 import Vec3 from "../api/Vec3";
-import { EventSystem } from "../util";
 import { BotSim } from "./BotSim";
+import { EventSystem } from "../EventSystem";
 import { World } from "./World";
 
 type SimulationState = "stopped" | "running";

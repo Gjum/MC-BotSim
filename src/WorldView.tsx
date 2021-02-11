@@ -3,7 +3,7 @@ import { Player } from "./api/Bot";
 import { Block, emptyBlock, MATERIAL_AIR } from "./botSimulator/Block";
 import { Chunk, CHUNK_HEIGHT } from "./botSimulator/Chunk";
 import { World } from "./botSimulator/World";
-import { useOnChange } from "./util";
+import { useOnChange } from "./hooks";
 import "./WorldView.css";
 
 interface View {

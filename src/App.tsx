@@ -4,8 +4,8 @@ import "./App.css";
 import { BotSim } from "./botSimulator/BotSim";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
+import { useOnChange, usePromise } from "./hooks";
 import { ScriptEditor } from "./ScriptEditor";
-import { useOnChange, usePromise } from "./util";
 import WorldView from "./WorldView";
 
 export default function App() {

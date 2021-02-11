@@ -1,7 +1,7 @@
 import { Bot, Player, UUID } from "../api/Bot";
 import { Block } from "./Block";
 import { Chunk } from "./Chunk";
-import { EventSystem, EventSystemLater } from "../util";
+import { EventSystem, EventSystemLater } from "../EventSystem";
 
 export class World {
   private bots: Record<UUID, Bot> = {};
