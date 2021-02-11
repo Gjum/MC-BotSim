@@ -1,3 +1,4 @@
+import Look from "./api/Look";
 import Vec3 from "./api/Vec3";
 import "./App.css";
 import { BotSim } from "./botSimulator/BotSim";
@@ -89,6 +90,7 @@ async function makeExampleSimulator(mapStrs: string[]) {
   const bot: BotSim = await sim.makeBot("", { uuid: "42", name: "Bot" });
   world.followedPlayerUUID = bot.uuid;
   bot.position = new Vec3(0.5, 1, 0.5);
+  bot.look = Look.fromDegrees(-45, 0);
   bot.setControlState("forward", true);
 
   world.onEachTick((tick) => console.log(`World tick`, tick));

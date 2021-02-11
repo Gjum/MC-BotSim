@@ -29,6 +29,8 @@ export class BotSim implements Bot {
   window: McWindow | null = null;
 
   controlState = {} as Record<Control, boolean>;
+  movementSpeed = 0.1; // meters per tick
+
   events = new EventEmitter();
 
   unregisterPhysics: () => void;
@@ -41,9 +43,21 @@ export class BotSim implements Bot {
 
     world.registerBot(this);
 
-    this.unregisterPhysics = world.onEachTick((tick) => {
-      // XXX do physics
-    });
+    this.unregisterPhysics = world.onEachTick((tick) => this.doPhysicsTick());
+  }
+
+  private doPhysicsTick() {
+    let velocity = new Vec3();
+    {
+      let controlVel = new Vec3();
+      if (this.controlState.forward) {
+        const forwardVelocity = this.look.toVec3();
+        controlVel = controlVel.plus(forwardVelocity);
+      }
+      velocity = velocity.plus(controlVel.scaled(this.movementSpeed));
+    }
+    // XXX do other physics: falling, collision
+    this.position = this.position.plus(velocity);
   }
 
   close() {
