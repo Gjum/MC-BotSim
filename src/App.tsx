@@ -14,11 +14,18 @@ export default function App() {
       <div className="App-editor">
         <ScriptEditor />
       </div>
+      <div className="App-controls">
+        <Controls />
+      </div>
       <div className="App-world">
         <WorldView {...{ world }} />
       </div>
     </div>
   );
+}
+
+export function Controls() {
+  return <button value="sdsdf">Run</button>;
 }
 
 const exampleMapStrs = [

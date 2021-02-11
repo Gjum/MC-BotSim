@@ -1,27 +1,31 @@
 .App {
   height: 100vh;
-  max-height: 100vh;
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: min-content 1fr;
+  grid-template-areas:
+    "controls world"
+    "editor world";
+}
+.App-controls {
+  grid-area: controls;
 }
 .App-editor {
-  max-width: 850px;
-  flex: 1;
+  grid-area: editor;
   overflow: hidden;
 }
 .App-world {
-  flex: 1;
+  grid-area: world;
 }
 
 /* screen is taller than wide */
 @media (max-width: 100vh) {
   .App {
-    flex-direction: column;
-  }
-  .App-editor,
-  .App-world {
-    height: 50%;
-    /* width: unset; */
-    max-width: unset;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr min-content 50%;
+    grid-template-areas:
+      "editor"
+      "controls"
+      "world";
   }
 }
