@@ -93,19 +93,20 @@ export class World {
   private changeEmitter = new RunLater(() =>
     emitEventTo(this, this.changeHandlers)
   );
-  onChange(handler: () => void) {
+  onEachChange = (handler: () => void) => {
     return doEventHandler(this.changeHandlers, ++this.nextHandlerId, handler);
-  }
+  };
 
   private tickEachHandlers: Record<number, TickHandler> = {};
-  onEachTick(handler: TickHandler) {
+  onEachTick = (handler: TickHandler) => {
     return doEventHandler(this.tickEachHandlers, ++this.nextHandlerId, handler);
-  }
+  };
 
   private tickNextHandlers: Record<number, TickHandler> = {};
-  onNextTick(handler: TickHandler) {
-    return doEventHandler(this.tickNextHandlers, ++this.nextHandlerId, handler);
-  }
+  onNextTick = (handler: TickHandler) => {
+    doEventHandler(this.tickNextHandlers, ++this.nextHandlerId, handler);
+    this.tickNextHandlers = {};
+  };
 }
 
 export type TickHandler = (tick: number) => void;

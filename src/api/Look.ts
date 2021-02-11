@@ -1,3 +1,5 @@
+import Vec3 from "./Vec3";
+
 export interface YawPitch {
   yaw: number;
   pitch: number;
@@ -31,6 +33,14 @@ export class Look implements YawPitch {
     yaw = 180 - yaw;
     pitch = -pitch;
     return new Look((yaw * Math.PI) / 180, (pitch * Math.PI) / 180);
+  }
+
+  toVec3() {
+    return new Vec3(
+      -Math.cos(this.pitch) * Math.sin(this.yaw),
+      -Math.sin(this.pitch),
+      Math.cos(this.pitch) * Math.cos(this.yaw)
+    );
   }
 }
 

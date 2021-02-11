@@ -27,6 +27,10 @@ export class Vec3 implements XYZ {
     return new Vec3(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
   }
 
+  scaled(scalar: number) {
+    return new Vec3(this.x * scalar, this.y * scalar, this.z * scalar);
+  }
+
   minus(other: XYZ) {
     return new Vec3(this.x - other.x, this.y - other.y, this.z - other.z);
   }

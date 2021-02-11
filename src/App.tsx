@@ -1,13 +1,23 @@
-import { useMemo } from "react";
 import Vec3 from "./api/Vec3";
 import "./App.css";
 import { BotSim } from "./botSimulator/BotSim";
+import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
 import { ScriptEditor } from "./ScriptEditor";
+import { useOnChange, usePromise } from "./util";
 import WorldView from "./WorldView";
 
 export default function App() {
-  const world = useMemo(() => makeExampleWorld(exampleMapStrs), []);
+  const { value: simulator } = usePromise(() =>
+    makeExampleSimulator(exampleMapStrs)
+  );
+
+  if (!simulator)
+    return (
+      <div className="App" style={styleCentered}>
+        Loading simulator ...
+      </div>
+    );
 
   return (
     <div className="App">
@@ -15,17 +25,45 @@ export default function App() {
         <ScriptEditor />
       </div>
       <div className="App-controls">
-        <Controls />
+        <Controls simulator={simulator} />
       </div>
       <div className="App-world">
-        <WorldView {...{ world }} />
+        <WorldView world={simulator.world} />
       </div>
     </div>
   );
 }
 
-export function Controls() {
-  return <button value="sdsdf">Run</button>;
+const styleCentered = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
+export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
+  useOnChange(simulator);
+
+  function runClicked() {
+    simulator.startTicking();
+  }
+  function pauseClicked() {
+    simulator.stopTicking();
+  }
+  function resetClicked() {
+    simulator.stopTicking();
+  }
+
+  return (
+    <div style={{ ...styleCentered, margin: ".5em" }}>
+      <button onClick={runClicked} disabled={simulator.state === "running"}>
+        Start
+      </button>
+      <button onClick={pauseClicked} disabled={simulator.state === "stopped"}>
+        Pause
+      </button>
+      <button onClick={resetClicked}>Reset</button>
+    </div>
+  );
 }
 
 const exampleMapStrs = [
@@ -42,18 +80,20 @@ const materialShorthands: Record<string, string> = {
   a: "minecraft:grass",
 };
 
-function makeExampleWorld(mapStrs: string[]) {
-  const world = new World();
+async function makeExampleSimulator(mapStrs: string[]) {
+  const sim = new SimulationEnvironment();
+  const world = sim.world;
 
   setBlocksFromMap(world, mapStrs);
 
-  const bot = new BotSim(world, { uuid: "42", name: "Bot" });
+  const bot: BotSim = await sim.makeBot("", { uuid: "42", name: "Bot" });
+  world.followedPlayerUUID = bot.uuid;
   bot.position = new Vec3(0.5, 1, 0.5);
-  world.followedPlayerUUID = "42";
+  bot.setControlState("forward", true);
 
-  setInterval(() => world.doTick(), 1000);
+  world.onEachTick((tick) => console.log(`World tick`, tick));
 
-  return world;
+  return sim;
 }
 
 function setBlocksFromMap(world: World, mapStrs: string[]) {

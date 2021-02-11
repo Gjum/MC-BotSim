@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Player } from "./api/Bot";
 import { Block, emptyBlock, MATERIAL_AIR } from "./botSimulator/Block";
 import { Chunk, CHUNK_HEIGHT } from "./botSimulator/Chunk";
 import { World } from "./botSimulator/World";
+import { useOnChange } from "./util";
 import "./WorldView.css";
 
 interface View {
@@ -10,17 +11,6 @@ interface View {
   z: number;
   range: number;
   topY: number;
-}
-
-export function useChange(onChange: (handler: () => void) => () => void) {
-  const [stateId, setStateId] = useState(1);
-  useEffect(
-    () =>
-      onChange(() => {
-        setStateId(stateId + 1);
-      }),
-    [onChange]
-  );
 }
 
 const scrollStep = 53;
@@ -32,7 +22,7 @@ export default function WorldView({
   world: World;
   screenRange?: number;
 }) {
-  useChange(useCallback((h) => world.onChange(h), [world]));
+  useOnChange(world);
 
   // TODO if no followed player: center among all entities/chunks
   const center = world.getBotByUUID(world.followedPlayerUUID!)!.position;
