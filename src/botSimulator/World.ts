@@ -7,7 +7,6 @@ export class World {
   private bots: Record<UUID, Bot> = {};
   private chunks: Record<ChunkKey, Chunk> = {};
   private players: Record<UUID, Player> = {};
-  followedPlayerUUID?: UUID;
 
   private changeEvent = new EventSystemLater();
   readonly onEachChange = this.changeEvent.onEach;
@@ -16,6 +15,10 @@ export class World {
   private tickEvent = new EventSystem<number>();
   readonly onEachTick = this.tickEvent.onEach;
   readonly onNextTick = this.tickEvent.onNext;
+
+  private playerJoinedEvent = new EventSystem<Player>();
+  readonly onEachPlayerJoined = this.playerJoinedEvent.onEach;
+  readonly onNextPlayerJoined = this.playerJoinedEvent.onNext;
 
   /** this includes bots */
   getPlayers() {
@@ -36,6 +39,7 @@ export class World {
     }
     this.bots[bot.uuid] = bot;
     this.players[bot.uuid] = bot;
+    this.playerJoinedEvent.emit(bot);
     this.changeEvent.emitLater();
   }
 

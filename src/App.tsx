@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { UUID } from "./api/Bot";
 import "./App.css";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
@@ -8,6 +10,19 @@ import WorldView from "./WorldView";
 
 export default function App() {
   const { value: simulator } = usePromise(() => makeExampleSimulator());
+
+  const [followedPlayerUUID, followPlayer] = useState<UUID>();
+  useEffect(() => {
+    if (simulator) {
+      // may already have a player connected; select it
+      const somePlayer = simulator.world.getPlayers()[0];
+      if (somePlayer) followPlayer(somePlayer.uuid);
+
+      return simulator.world.onEachPlayerJoined((player) => {
+        followPlayer(player.uuid);
+      });
+    }
+  }, [simulator, followPlayer]);
 
   if (!simulator)
     return (
@@ -25,7 +40,10 @@ export default function App() {
         <Controls simulator={simulator} />
       </div>
       <div className="App-world">
-        <WorldView world={simulator.world} />
+        <WorldView
+          world={simulator.world}
+          followedPlayerUUID={followedPlayerUUID}
+        />
       </div>
     </div>
   );

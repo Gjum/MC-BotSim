@@ -36,17 +36,13 @@ export class BotSim implements Bot {
   readonly onEachConnectionChange = this.conectionStatusEvent.onEach;
   readonly onNextConnectionChange = this.conectionStatusEvent.onNext;
 
-  unregisterPhysics: () => void;
+  unregisterPhysics: () => void = () => {};
 
   constructor(world: World, options: BotSimOptions) {
     this.world = world;
     this.name = options.name;
     this.uuid = options.uuid;
     this.autoReconnect = definedOr(options.autoReconnect, true);
-
-    world.registerBot(this);
-
-    this.unregisterPhysics = world.onEachTick((tick) => this.doPhysicsTick());
   }
 
   private doPhysicsTick() {
@@ -71,16 +67,38 @@ export class BotSim implements Bot {
     this.conectionStatusEvent.emit(this.connectionStatus);
     // in this simulation we connect really quickly, and never fail
     setImmediate(() => {
-      this.connectionStatus = "online";
-      this.conectionStatusEvent.emit(this.connectionStatus);
+      // update simulation
+      console.log(`bot: simulate connected`);
+      this.world.registerBot(this);
+      this.handleConnected();
     });
 
     return await this.waitJoinGame(cancelToken);
   }
 
-  close() {
+  private handleConnected() {
+    this.connectionStatus = "online";
+
+    this.unregisterPhysics = this.world.onEachTick((tick) =>
+      this.doPhysicsTick()
+    );
+
+    this.conectionStatusEvent.emit(this.connectionStatus);
+  }
+
+  disconnect() {
+    this.connectionStatus = "offline";
+
     this.unregisterPhysics();
+
+    this.conectionStatusEvent.emit(this.connectionStatus);
+
+    // update simulation
     this.world.unregisterBot(this);
+  }
+
+  close() {
+    this.disconnect();
   }
 
   getEyeHeight() {

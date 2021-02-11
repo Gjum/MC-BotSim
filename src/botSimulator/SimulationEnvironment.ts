@@ -30,8 +30,6 @@ export class SimulationEnvironment implements Environment {
     const bot = new BotSim(this.world, optionsSim);
     bot.position = new Vec3(0.5, 1, 0.5);
 
-    this.world.followedPlayerUUID = bot.uuid;
-
     const botWithHelpers = addHelpersToBot(bot);
     return botWithHelpers;
   }

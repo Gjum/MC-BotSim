@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Player } from "./api/Bot";
+import { Player, UUID } from "./api/Bot";
 import { Block, emptyBlock, MATERIAL_AIR } from "./botSimulator/Block";
 import { Chunk, CHUNK_HEIGHT } from "./botSimulator/Chunk";
 import { World } from "./botSimulator/World";
@@ -17,15 +17,21 @@ const scrollStep = 53;
 
 export default function WorldView({
   world,
+  followedPlayerUUID,
   screenRange: screenRangeDefault = 3,
 }: {
   world: World;
+  followedPlayerUUID?: UUID;
   screenRange?: number;
 }) {
   useOnChange(world);
 
-  // TODO if no followed player: center among all entities/chunks
-  const center = world.getBotByUUID(world.followedPlayerUUID!)!.position;
+  // TODO by default, center among all entities/chunks
+  let center = { x: 0.5, y: 0, z: 0.5 };
+  if (followedPlayerUUID) {
+    const followedPlayer = world.getBotByUUID(followedPlayerUUID);
+    if (followedPlayer) center = followedPlayer.position;
+  }
 
   const [screenRange, setScreenRange] = useState(screenRangeDefault);
 

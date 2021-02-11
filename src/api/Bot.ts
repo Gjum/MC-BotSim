@@ -35,6 +35,7 @@ export interface Bot extends Player {
 
   /** Connect to `gameAddress`. To connect to a different address, create a new Bot. */
   connect(cancelToken?: CancelToken): Promise<void>;
+  disconnect(): void;
   close(): void;
 
   /** distance feet-eyes */
