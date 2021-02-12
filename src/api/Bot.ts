@@ -33,13 +33,22 @@ export interface Bot extends Player {
   /** null while a window is being opened (no window to interact with) */
   readonly window: McWindow | null;
 
-  /** Connect to `gameAddress`. To connect to a different address, create a new Bot. */
+  /**
+   * Connect to `gameAddress`.
+   * To connect to a different address, create a new Bot,
+   * for example through an `Environment`: `env.makeBot(address, options)`.
+   * The returned `Promise` resolves once the bot joined the game.
+   * */
   connect(cancelToken?: CancelToken): Promise<void>;
   disconnect(): void;
   close(): void;
 
   /** distance feet-eyes */
   getEyeHeight(): number;
+
+  // the following actions execute instantly
+
+  chat(message: string): void;
 
   /** Control movement similar to pressing/releasing keys on the visual client. */
   setControlState(control: Control, state: boolean): void;
@@ -53,10 +62,9 @@ export interface Bot extends Player {
   startUsingItem(hand?: Hand): void;
   stopUsingItem(hand?: Hand): void;
 
-  lookAt(position: Vec3): Promise<void>;
-  lookHorizontal(position: Vec3): Promise<void>;
-  lookDegrees(yaw: number, pitch: number): Promise<void>;
-  lookRadians(yaw: number, pitch: number): Promise<void>;
+  // the following actions take time, so they return a `Promise`
+
+  setLook(look: Look): Promise<void>;
 
   swapSlotWithHotbar(slot: number, hotbar: number): Promise<void>;
 

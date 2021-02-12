@@ -5,16 +5,21 @@ export interface YawPitch {
   pitch: number;
 }
 
-/** stores angles in radians */
+/**
+ * Stores angles in radians.
+ * Minecraft's angles are different from the "typical" geometry.
+ * For yaw, south is 0, west is +90, east is -90.
+ * For pitch, straight is 0, down is +90, up is -90.
+ */
 export class Look implements YawPitch {
   readonly yaw: number;
   readonly pitch: number;
 
   get yawDeg() {
-    return 180 - (this.yaw * 180) / Math.PI;
+    return (this.yaw * 180) / Math.PI;
   }
   get pitchDeg() {
-    return -(this.pitch * 180) / Math.PI;
+    return (this.pitch * 180) / Math.PI;
   }
 
   /** argument angles are in radians */
@@ -29,10 +34,22 @@ export class Look implements YawPitch {
     }
   }
 
+  static SOUTH = new Look(0, 0);
+  static WEST = new Look(90, 0);
+  static NORTH = new Look(180, 0);
+  static EAST = new Look(-90, 0);
+  static DOWN = new Look(0, 90);
+  static UP = new Look(0, -90);
+
   static fromDegrees(yaw: number, pitch: number) {
-    yaw = 180 - yaw;
-    pitch = -pitch;
     return new Look((yaw * Math.PI) / 180, (pitch * Math.PI) / 180);
+  }
+
+  static fromVec(vec: Vec3) {
+    const yaw = Math.atan2(-vec.x, vec.z);
+    const groundDistance = Math.sqrt(vec.x * vec.x + vec.z * vec.z);
+    const pitch = Math.atan2(vec.y, groundDistance);
+    return new Look(yaw, pitch);
   }
 
   toVec3() {

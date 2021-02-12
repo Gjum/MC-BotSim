@@ -134,33 +134,12 @@ export class BotSim implements Bot {
     throw new Error("Method not implemented."); // TODO
   }
 
-  async lookAt(position: Vec3): Promise<void> {
-    const delta = position.minus(
-      this.position.plus(new Vec3(0, this.getEyeHeight(), 0))
-    );
-    const yaw = Math.atan2(-delta.x, -delta.z);
-    const groundDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
-    const pitch = Math.atan2(delta.y, groundDistance);
-    return await this.lookRadians(yaw, pitch);
+  chat(message: string): void {
+    console.log(`Chat:`, message); // TODO show in webpage
   }
 
-  async lookHorizontal(position: Vec3): Promise<void> {
-    const delta = this.position.minus(position); // no need to adjust y
-    const yaw = Math.atan2(delta.x, delta.z);
-    return await this.lookRadians(yaw, 0);
-  }
-
-  async lookDegrees(yaw: number, pitch: number): Promise<void> {
-    yaw = 180 - yaw;
-    pitch = -pitch;
-    return await this.lookRadians(
-      (yaw * Math.PI) / 180,
-      (pitch * Math.PI) / 180
-    );
-  }
-
-  async lookRadians(yaw: number, pitch: number): Promise<void> {
-    this.look = new Look(yaw, pitch);
+  async setLook(look: Look): Promise<void> {
+    this.look = look;
     return await this.waitNextPhysicsSend();
   }
 

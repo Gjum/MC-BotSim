@@ -3,8 +3,9 @@ module.exports = async function (env) {
   const { Vec3 } = env;
 
   const bot = await env.makeBot("localhost", { name: "Bot" });
+  await bot.connect();
 
-  const goal = new Vec3(0, 0, 2);
+  const goal = new Vec3(2.5, 0, 1.5);
   const closeEnough = 0.3;
   try {
     while (bot.position.xzDistanceTo(goal) > closeEnough) {
@@ -14,4 +15,5 @@ module.exports = async function (env) {
   } finally {
     bot.setControlState("forward", false);
   }
+  bot.chat(`Arrived at the goal!`);
 };
