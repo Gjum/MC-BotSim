@@ -1,5 +1,5 @@
 import React from "react";
-import { Player } from "../api/Bot";
+import { Entity } from "../api/Bot";
 import { Projection } from "./WorldView";
 
 export const PlayersLayer = ({
@@ -7,7 +7,7 @@ export const PlayersLayer = ({
   projection,
   fontSize,
 }: {
-  players: Player[];
+  players: Entity[];
   projection: Projection;
   fontSize: number;
 }) => (

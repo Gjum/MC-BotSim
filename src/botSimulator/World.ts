@@ -1,12 +1,16 @@
-import { Bot, Player, UUID } from "../api/Bot";
+import { Bot, Entity, UUID } from "../api/Bot";
 import { Block } from "./Block";
 import { Chunk } from "./Chunk";
 import { EventSystem, EventSystemLater } from "../EventSystem";
+import Vec3 from "../api/Vec3";
+import Look from "../api/Look";
+import { McWindow } from "../api/Window";
+import { PlayerInventory } from "./WindowSim";
 
 export class World {
   private bots: Record<UUID, Bot> = {};
   private chunks: Record<ChunkKey, Chunk> = {};
-  private players: Record<UUID, Player> = {};
+  private entities: Record<UUID, Entity> = {};
 
   private changeEvent = new EventSystemLater();
   readonly onEachChange = this.changeEvent.onEach;
@@ -16,13 +20,12 @@ export class World {
   readonly onEachTick = this.tickEvent.onEach;
   readonly onNextTick = this.tickEvent.onNext;
 
-  private playerJoinedEvent = new EventSystem<Player>();
+  private playerJoinedEvent = new EventSystem<Entity>();
   readonly onEachPlayerJoined = this.playerJoinedEvent.onEach;
   readonly onNextPlayerJoined = this.playerJoinedEvent.onNext;
 
-  /** this includes bots */
-  getPlayers() {
-    return Object.values(this.players);
+  getEntities() {
+    return Object.values(this.entities);
   }
 
   getBots() {
@@ -33,12 +36,21 @@ export class World {
     return this.bots[uuid];
   }
 
+  spawnPlayer(player: MutablePlayer) {
+    player.position = new Vec3(0.5, 1.5, 0.5);
+    player.look = new Look(0, 0);
+    player.health = 10;
+    player.food = 10;
+    player.saturation = 5;
+    player.window = new PlayerInventory(player);
+  }
+
   registerBot(bot: Bot) {
     if (this.bots[bot.uuid]) {
       throw new Error(`UUID ${bot.uuid} already exists in world`);
     }
     this.bots[bot.uuid] = bot;
-    this.players[bot.uuid] = bot;
+    this.entities[bot.uuid] = bot;
     this.playerJoinedEvent.emit(bot);
     this.changeEvent.emitLater();
   }
@@ -49,10 +61,14 @@ export class World {
       return;
     }
     delete this.bots[bot.uuid];
-    delete this.players[bot.uuid];
+    delete this.entities[bot.uuid];
     this.changeEvent.emitLater();
   }
 
+  /**
+   * Entities, chunks, etc. should call this
+   * so listeners know that some part of the world changed.
+   */
   notifyChildChanged(child: any) {
     this.changeEvent.emitLater();
   }
@@ -98,6 +114,16 @@ export class World {
     ++this.gameTick;
     this.tickEvent.emit(this.gameTick);
   }
+}
+
+export interface MutablePlayer extends Entity {
+  position: Vec3;
+  look: Look;
+  health: number;
+  food: number;
+  saturation: number;
+  hotbarSelection: number;
+  window: McWindow | null;
 }
 
 export type TickHandler = (tick: number) => void;

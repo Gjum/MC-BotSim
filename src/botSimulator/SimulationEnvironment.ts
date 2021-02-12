@@ -4,6 +4,8 @@ import Vec3 from "../api/Vec3";
 import { BotSim } from "./BotSim";
 import { EventSystem } from "../EventSystem";
 import { World } from "./World";
+import { PlayerInventory } from "./WindowSim";
+import Look from "../api/Look";
 
 type SimulationState = "stopped" | "running";
 
@@ -58,12 +60,10 @@ export class SimulationEnvironment implements Environment {
     options: BotOptions
   ): Promise<BotSim & BotWithHelpers> {
     // TODO when offline mode, get UUID for name
-    const optionsSim = { name: "Bot", uuid: "42", ...options };
+    const optionsSim = { name: "Bot", uuid: "42", gameAddress, ...options };
     const bot = new BotSim(this.world, optionsSim);
-    bot.position = new Vec3(0.5, 1.5, 0.5);
-
-    const botWithHelpers = addHelpersToBot(bot);
-    return botWithHelpers;
+    setImmediate(() => this.world.spawnPlayer(bot));
+    return addHelpersToBot(bot);
   }
 
   startTicking(tps = this.tps) {

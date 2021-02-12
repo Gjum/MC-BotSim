@@ -57,7 +57,7 @@ export default function WorldView({
     if (f) setScreenRange(screenRange * f);
   }
 
-  const players = world.getPlayers();
+  const players = world.getEntities();
 
   return (
     <svg

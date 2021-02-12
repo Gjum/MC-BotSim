@@ -1,12 +1,19 @@
-import { Bot, ConnectionStatus, Control, Hand, UUID } from "../api/Bot";
+import {
+  Bot,
+  ConnectionStatus,
+  Control,
+  Hand,
+  PlayerListItem,
+  UUID,
+} from "../api/Bot";
 import { CancelToken } from "../api/CancelToken";
 import Look from "../api/Look";
 import Vec3 from "../api/Vec3";
 import { McWindow } from "../api/Window";
-import { World } from "./World";
+import { MutablePlayer, World } from "./World";
 import { definedOr } from "../util";
 import { EventSystem } from "../EventSystem";
-import { MATERIAL_AIR } from "./Block";
+import { Block, MATERIAL_AIR } from "./Block";
 import {
   GRAVITY,
   DRAG,
@@ -18,37 +25,43 @@ import {
 export type BotSimOptions = {
   name: string;
   uuid: UUID;
+  gameAddress: string;
   autoReconnect?: boolean;
 };
 
-export class BotSim implements Bot {
-  world: World;
-  gameAddress = "Simulator";
-  name: string;
-  uuid: UUID;
-  autoReconnect: boolean;
+export class BotSim implements Bot, MutablePlayer {
+  private world: World;
+  readonly gameAddress: string;
+  get gameTick() {
+    return this.world.getGameTick();
+  }
+  playerList: Record<UUID, PlayerListItem> = {};
 
   connectionStatus: ConnectionStatus = "offline";
+  autoReconnect: boolean;
+
+  name: string;
+  uuid: UUID;
   position = new Vec3();
   velocity = new Vec3();
   look = new Look(0, 0);
   health = 0;
   food = 0;
   saturation = 0;
-  gameTick = 1;
   window: McWindow | null = null;
-
-  controlState = {} as Record<Control, boolean>;
+  hotbarSelection = 0;
   movementSpeed = WALK_SPEED; // meters per tick
+  private controlState = {} as Record<Control, boolean>;
 
   private conectionStatusEvent = new EventSystem<ConnectionStatus>();
   readonly onEachConnectionChange = this.conectionStatusEvent.onEach;
   readonly onNextConnectionChange = this.conectionStatusEvent.onNext;
 
-  unregisterPhysics: () => void = () => {};
+  private unregisterPhysics: () => void = () => {};
 
   constructor(world: World, options: BotSimOptions) {
     this.world = world;
+    this.gameAddress = options.gameAddress;
     this.name = options.name;
     this.uuid = options.uuid;
     this.autoReconnect = definedOr(options.autoReconnect, true);
@@ -120,7 +133,7 @@ export class BotSim implements Bot {
     this.world.unregisterBot(this);
   }
 
-  close() {
+  shutdown() {
     this.disconnect();
   }
 
@@ -128,14 +141,46 @@ export class BotSim implements Bot {
     return 1.68; // TODO this can change when sneaking, also not sure if correct value
   }
 
+  chat(message: string): void {
+    console.log(`Chat:`, message); // TODO show in webpage
+  }
+
   setControlState(control: Control, state: boolean): void {
     this.controlState[control] = state;
-    // TODO send un/sneak, un/sprint, etc.
+  }
+
+  selectHotbar(index: number) {
+    this.hotbarSelection = index;
+  }
+
+  // swapHands() {
+  //   this.waitWindowOpen().then((window) => {
+  //     const main = window.TODO;
+  //     const other = window.TODO;
+  //     window.swapSlotWithHotbar(main, other);
+  //   });
+  // }
+
+  closeWindow() {
+    throw new Error("Method not implemented."); // TODO
   }
 
   placeBlock(position: Vec3, hand?: Hand) {
-    throw new Error("Method not implemented."); // TODO
+    if (!this.window) {
+      throw new Error(`Must wait for window to open to place a block`);
+    }
+    const { x, y, z } = position.floored();
+    const slot = this.window.hotbar[this.hotbarSelection];
+    if (!slot) return;
+    const block: Block = { material: "" };
+    this.world.setBlock(x, y, z, block);
   }
+
+  activateBlock(position: Vec3, hand?: Hand) {
+    throw new Error("Method not implemented."); // TODO call simulator
+  }
+
+  digLocation: Vec3 | null = null;
 
   startDigging(position: Vec3): void {
     throw new Error("Method not implemented."); // TODO
@@ -157,8 +202,18 @@ export class BotSim implements Bot {
     throw new Error("Method not implemented."); // TODO
   }
 
-  chat(message: string): void {
-    console.log(`Chat:`, message); // TODO show in webpage
+  /** Attack the looked-at entity. */
+  attackEntity(): void {
+    throw new Error("Method not implemented."); // TODO
+  }
+
+  /** Interact (right-click) the looked-at entity. */
+  interactEntity(): void {
+    throw new Error("Method not implemented."); // TODO
+  }
+
+  async respawn() {
+    this.world.spawnPlayer(this);
   }
 
   async setLook(look: Look): Promise<void> {
@@ -197,6 +252,13 @@ export class BotSim implements Bot {
       this.world.onNextTick((tick) => {
         resolve();
       });
+    });
+  }
+
+  async waitWindowOpen(cancelToken?: CancelToken): Promise<McWindow> {
+    await this.waitJoinGame(cancelToken);
+    return await new Promise<McWindow>((resolve) => {
+      throw new Error("Method not implemented."); // XXX
     });
   }
 }

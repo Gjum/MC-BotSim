@@ -95,7 +95,7 @@ function useFollowedPlayer(simulator: SimulationEnvironment) {
   useEffect(() => {
     if (simulator) {
       // may already have a player connected; select it
-      const somePlayer = simulator.world.getPlayers()[0];
+      const somePlayer = simulator.world.getEntities()[0];
       if (somePlayer) followPlayer(somePlayer.uuid);
 
       return simulator.world.onEachPlayerJoined((player) => {
