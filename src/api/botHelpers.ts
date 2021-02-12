@@ -10,7 +10,7 @@ export async function digBlock(
   ticks: number,
   cancelToken?: CancelToken
 ): Promise<void> {
-  await lookAt.call(this, position.plus(new Vec3(0.5, 0.5, 0.5)));
+  await lookAt.call(this, position.plus(0.5, 0.5, 0.5));
   this.startDigging(position);
   try {
     await sleepTicks.call(this, ticks, cancelToken);
@@ -20,14 +20,15 @@ export async function digBlock(
 }
 
 export async function lookAt(this: Bot, position: Vec3): Promise<void> {
-  const delta = position
-    .minus(this.position)
-    .plus(new Vec3(0, this.getEyeHeight(), 0));
+  const delta = position.minus(this.position).plus(0, this.getEyeHeight(), 0);
   return await this.setLook(Look.fromVec(delta));
 }
 
 export async function lookHorizontal(this: Bot, position: Vec3): Promise<void> {
   const delta = position.minus(this.position); // no need to adjust y
+  if (delta.xzDistanceTo(new Vec3()) < 0.01) {
+    return; // yaw doesn't matter when looking straight up/down
+  }
   const yaw = Look.fromVec(delta).yaw;
   return await lookRadians.call(this, yaw, 0);
 }

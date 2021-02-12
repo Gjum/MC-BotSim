@@ -23,6 +23,16 @@ export class Vec3 implements XYZ {
     }
   }
 
+  withX(x: number) {
+    return new Vec3(x, this.y, this.z);
+  }
+  withY(y: number) {
+    return new Vec3(this.x, y, this.z);
+  }
+  withZ(z: number) {
+    return new Vec3(this.x, this.y, z);
+  }
+
   floored() {
     return new Vec3(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
   }
@@ -31,15 +41,42 @@ export class Vec3 implements XYZ {
     return new Vec3(this.x * scalar, this.y * scalar, this.z * scalar);
   }
 
-  minus(other: XYZ) {
-    return new Vec3(this.x - other.x, this.y - other.y, this.z - other.z);
+  minus(x: XYZ): Vec3;
+  minus(x: number, y: number, z: number): Vec3;
+  minus(x: XYZ | number, y?: number, z?: number) {
+    if (typeof x === "object") {
+      const other = x as XYZ;
+      x = other.x;
+      y = other.y;
+      z = other.z;
+    }
+    return new Vec3(this.x - x, this.y - y!, this.z - z!);
   }
 
-  plus(other: XYZ) {
-    return new Vec3(this.x + other.x, this.y + other.y, this.z + other.z);
+  plus(x: XYZ): Vec3;
+  plus(x: number, y: number, z: number): Vec3;
+  plus(x: XYZ | number, y?: number, z?: number): Vec3 {
+    if (typeof x === "object") {
+      const other = x as XYZ;
+      x = other.x;
+      y = other.y;
+      z = other.z;
+    }
+    return new Vec3(this.x + x, this.y + y!, this.z + z!);
   }
 
-  xzDistanceTo(other: Vec3) {
+  distanceSquared(other: Vec3): number {
+    const dx = this.x - other.x;
+    const dy = this.y - other.y;
+    const dz = this.z - other.z;
+    return dx * dx + dy * dy + dz * dz;
+  }
+
+  distanceTo(other: Vec3): number {
+    return Math.floor(this.distanceSquared(other));
+  }
+
+  xzDistanceTo(other: Vec3): number {
     const dx = this.x - other.x;
     const dz = this.z - other.z;
     return Math.sqrt(dx * dx + dz * dz);
