@@ -16,4 +16,5 @@ module.exports = async function (env) {
     bot.setControlState("forward", false);
   }
   bot.chat(`Arrived at the goal!`);
+  while (true) await bot.lookDegrees(bot.look.yawDeg + 10, bot.look.pitchDeg);
 };
