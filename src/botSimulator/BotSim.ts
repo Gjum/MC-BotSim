@@ -6,6 +6,14 @@ import { McWindow } from "../api/Window";
 import { World } from "./World";
 import { definedOr } from "../util";
 import { EventSystem } from "../EventSystem";
+import { MATERIAL_AIR } from "./Block";
+import {
+  GRAVITY,
+  DRAG,
+  PLAYER_APOTHEM,
+  PLAYER_HEIGHT_STANDING,
+  WALK_SPEED,
+} from "../api/constants";
 
 export type BotSimOptions = {
   name: string;
@@ -21,7 +29,8 @@ export class BotSim implements Bot {
   autoReconnect: boolean;
 
   connectionStatus: ConnectionStatus = "offline";
-  position = new Vec3(0, 0, 0);
+  position = new Vec3();
+  velocity = new Vec3();
   look = new Look(0, 0);
   health = 0;
   food = 0;
@@ -30,7 +39,7 @@ export class BotSim implements Bot {
   window: McWindow | null = null;
 
   controlState = {} as Record<Control, boolean>;
-  movementSpeed = 0.1; // meters per tick
+  movementSpeed = WALK_SPEED; // meters per tick
 
   private conectionStatusEvent = new EventSystem<ConnectionStatus>();
   readonly onEachConnectionChange = this.conectionStatusEvent.onEach;
@@ -46,18 +55,32 @@ export class BotSim implements Bot {
   }
 
   private doPhysicsTick() {
-    let velocity = new Vec3();
-    {
-      let controlVel = new Vec3();
-      if (this.controlState.forward) {
-        const forwardVelocity = this.look.toVec3();
-        controlVel = controlVel.plus(forwardVelocity);
-      }
-      velocity = velocity.plus(controlVel.scaled(this.movementSpeed));
+    this.velocity = this.velocity.minus(0, GRAVITY, 0).scaled(DRAG);
+
+    const controlVec = this.applyControls();
+
+    let { newPos, collidedVertically } = moveAndApplyCollision(
+      this.world,
+      this.position,
+      this.velocity.plus(controlVec)
+    );
+    if (collidedVertically) {
+      this.velocity = this.velocity.withY(0);
     }
-    // XXX do other physics: falling, collision
-    this.position = this.position.plus(velocity);
+
+    this.position = newPos;
     this.world.notifyChildChanged(this);
+  }
+
+  private applyControls() {
+    let controlVec = new Vec3();
+    if (this.controlState.forward) {
+      const forwardVelocity = this.look.toVec3();
+      controlVec = controlVec.plus(forwardVelocity);
+    }
+    // TODO apply other movement controls
+    // TODO apply jump control
+    return controlVec.scaled(this.movementSpeed);
   }
 
   async connect(cancelToken?: CancelToken) {
@@ -175,5 +198,66 @@ export class BotSim implements Bot {
         resolve();
       });
     });
+  }
+}
+
+/**
+ * Zeroes out all axis-aligned movements that create a new collision.
+ * Does not modify the passed arguments.
+ * Blocks that are intersecting the player before the movement
+ * are ignored in collision checks.
+ */
+function moveAndApplyCollision(world: World, position: Vec3, delta: Vec3) {
+  const initialColl = Array.from(iterCollisions(world, position, []));
+  let newPos = position;
+  let testPos;
+  let collidedHorizontally = false;
+  let collidedVertically = false;
+  testPos = newPos.plus(delta.x, 0, 0);
+  if (iterCollisions(world, testPos, initialColl).next().done) {
+    newPos = testPos;
+  } else collidedHorizontally = true;
+  testPos = newPos.plus(0, 0, delta.z);
+  if (iterCollisions(world, testPos, initialColl).next().done) {
+    newPos = testPos;
+  } else collidedHorizontally = true;
+  testPos = newPos.plus(0, delta.y, 0);
+  if (iterCollisions(world, testPos, initialColl).next().done) {
+    newPos = testPos;
+  } else collidedVertically = true;
+  return { newPos, collidedHorizontally, collidedVertically };
+}
+
+/** assumes all blocks are 1x1x1m */
+function* iterCollisions(
+  world: World,
+  pos: Vec3,
+  ignored: Vec3[]
+): Generator<Vec3> {
+  ignored = [...ignored]; // internal copy that we can append to
+  for (const z of [-PLAYER_APOTHEM, PLAYER_APOTHEM]) {
+    for (const x of [-PLAYER_APOTHEM, PLAYER_APOTHEM]) {
+      for (const y of [0, 1, PLAYER_HEIGHT_STANDING]) {
+        const corner = pos.plus(x, y, z);
+        const blockPos = corner.floored();
+        const block = world.getBlock(blockPos.x, blockPos.y, blockPos.z);
+        if (block === null) continue;
+        if (block.material === MATERIAL_AIR) continue;
+
+        let skip = false;
+        for (const ig of ignored) {
+          if (blockPos.distanceSquared(ig) < 0.01) {
+            skip = true;
+            break;
+          }
+        }
+        if (skip) continue;
+
+        yield blockPos;
+        // two corners may lie within the same block,
+        // but we only want to yield the block once
+        ignored.push(blockPos);
+      }
+    }
   }
 }
