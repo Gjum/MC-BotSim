@@ -1,14 +1,15 @@
+import { XYZ } from "../api/Vec3";
 import { Block, emptyBlock, MATERIAL_AIR } from "../botSimulator/Block";
 import { Chunk } from "../botSimulator/Chunk";
 import { World } from "../botSimulator/World";
-import { Projection, View } from "./WorldView";
+import { materialColors, Projection, View, XZ } from "./WorldView";
 
-export const BlocksPerspective = ({
+export const BlocksTopDownPerspective = ({
   world,
   projection,
 }: {
   world: World;
-  projection: Projection;
+  projection: TopDownPerspectiveProjection;
 }) => {
   const view = projection.view;
   const blockFacesByY = computeVisibleBlockFaces(world, view);
@@ -61,6 +62,23 @@ export const BlocksPerspective = ({
     </g>
   );
 };
+
+export class TopDownPerspectiveProjection implements Projection {
+  readonly view: View;
+  constructor(view: View) {
+    this.view = view;
+  }
+  screenFromWorld(pos: XYZ): XZ {
+    const dx = pos.x - this.view.x;
+    const dy = pos.y - this.view.y;
+    const dz = pos.z - this.view.z;
+    const scale = Math.pow(1.1, dy);
+    return {
+      x: dx * scale,
+      z: dz * scale,
+    };
+  }
+}
 
 interface BlockFace {
   block: Block;
@@ -168,11 +186,3 @@ function getFaceCornersInPerspective(
     ];
   }
 }
-
-const materialColors: Record<string, string | null> = {
-  [MATERIAL_AIR]: null,
-  "minecraft:stone": "gray",
-  "minecraft:gold_block": "gold",
-  "minecraft:redstone_block": "red",
-  "minecraft:grass": "green",
-};

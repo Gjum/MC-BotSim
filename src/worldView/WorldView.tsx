@@ -3,10 +3,14 @@ import { UUID } from "../api/Bot";
 import { XYZ } from "../api/Vec3";
 import { CHUNK_HEIGHT } from "../botSimulator/Chunk";
 import { World } from "../botSimulator/World";
-import { BlocksPerspective } from "./BlocksPerspective";
+import {
+  BlocksTopDownPerspective,
+  TopDownPerspectiveProjection,
+} from "./BlocksTopDownPerspective";
 import { useOnChange } from "../hooks";
 import { PlayersLayer } from "./PlayersLayer";
 import "./WorldView.css";
+import { MATERIAL_AIR } from "../botSimulator/Block";
 
 const scrollStep = 53;
 
@@ -37,7 +41,7 @@ export default function WorldView({
     range: screenRange,
     topY: CHUNK_HEIGHT,
   };
-  const projection = new TopDownPerspective(view);
+  const projection = new TopDownPerspectiveProjection(view);
 
   const fontSize = (screenRange * 2) / 24;
 
@@ -64,7 +68,7 @@ export default function WorldView({
       onWheel={onWheel}
     >
       <g className="WorldView-translate-world">
-        <BlocksPerspective {...{ world, projection }} />
+        <BlocksTopDownPerspective {...{ world, projection }} />
         <PlayersLayer {...{ players, projection, fontSize }} />
       </g>
     </svg>
@@ -89,19 +93,10 @@ export interface View {
   topY: number;
 }
 
-export class TopDownPerspective implements Projection {
-  readonly view: View;
-  constructor(view: View) {
-    this.view = view;
-  }
-  screenFromWorld(pos: XYZ): XZ {
-    const dx = pos.x - this.view.x;
-    const dy = pos.y - this.view.y;
-    const dz = pos.z - this.view.z;
-    const scale = Math.pow(1.1, dy);
-    return {
-      x: dx * scale,
-      z: dz * scale,
-    };
-  }
-}
+export const materialColors: Record<string, string | null> = {
+  [MATERIAL_AIR]: null,
+  "minecraft:stone": "gray",
+  "minecraft:gold_block": "gold",
+  "minecraft:redstone_block": "red",
+  "minecraft:grass": "green",
+};
