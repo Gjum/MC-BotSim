@@ -11,26 +11,8 @@ import WorldView from "./worldView/WorldView";
 const exampleScript = raw("./scripts/test.js");
 
 export default function App() {
-  const [script, setScript] = useState(exampleScript);
-
-  const simulator = useMemo(() => {
-    const simulator = new SimulationEnvironment(script);
-    setBlocksFromMap(simulator.world, exampleMapStrs);
-    return simulator;
-  }, [script]);
-
-  const [followedPlayerUUID, followPlayer] = useState<UUID>();
-  useEffect(() => {
-    if (simulator) {
-      // may already have a player connected; select it
-      const somePlayer = simulator.world.getPlayers()[0];
-      if (somePlayer) followPlayer(somePlayer.uuid);
-
-      return simulator.world.onEachPlayerJoined((player) => {
-        followPlayer(player.uuid);
-      });
-    }
-  }, [simulator, followPlayer]);
+  const { simulator, setScript } = useSimulator(exampleScript);
+  const followedPlayerUUID = useFollowedPlayer(simulator);
 
   if (!simulator) {
     return <div className="App centering">Loading simulator ...</div>;
@@ -40,7 +22,7 @@ export default function App() {
     <div className="App">
       <div className="App-editor">
         <ScriptEditor
-          script={script}
+          script={simulator.script}
           onChange={(content) => setScript(content || "")}
         />
       </div>
@@ -93,6 +75,36 @@ export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
       <button onClick={resetClicked}>Reset</button>
     </div>
   );
+}
+
+function useSimulator(defaultScript: string) {
+  const [script, setScript] = useState(defaultScript);
+
+  const simulator = useMemo(() => {
+    const simulator = new SimulationEnvironment(script);
+    setBlocksFromMap(simulator.world, exampleMapStrs);
+    return simulator;
+  }, [script]);
+
+  return { simulator, setScript };
+}
+
+function useFollowedPlayer(simulator: SimulationEnvironment) {
+  const [followedPlayerUUID, followPlayer] = useState<UUID>();
+
+  useEffect(() => {
+    if (simulator) {
+      // may already have a player connected; select it
+      const somePlayer = simulator.world.getPlayers()[0];
+      if (somePlayer) followPlayer(somePlayer.uuid);
+
+      return simulator.world.onEachPlayerJoined((player) => {
+        followPlayer(player.uuid);
+      });
+    }
+  }, [simulator, followPlayer]);
+
+  return followedPlayerUUID;
 }
 
 const exampleMapStrs = [
