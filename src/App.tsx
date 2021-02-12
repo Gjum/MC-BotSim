@@ -4,9 +4,9 @@ import { UUID } from "./api/Bot";
 import "./App.css";
 import { SimulationEnvironment } from "./botSimulator/SimulationEnvironment";
 import { World } from "./botSimulator/World";
-import { useOnChange, usePromise } from "./hooks";
+import { useOnChange } from "./hooks";
 import { ScriptEditor } from "./ScriptEditor";
-import WorldView from "./WorldView";
+import WorldView from "./worldView/WorldView";
 
 const exampleScript = raw("./scripts/test.js");
 
@@ -79,6 +79,7 @@ export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
   }
   function resetClicked() {
     simulator.stopTicking();
+    // XXX reset simulation
   }
 
   return (
