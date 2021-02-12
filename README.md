@@ -1,8 +1,10 @@
-# Minecraft Bot Simulato
+# Minecraft Bot Simulator
 
 Simulate Minecraft bots in the web browser.
 
 **[Open the app](https://botsim.netlify.app/)**
+
+[Browse the API](https://github.com/Gjum/MC-BotSim/tree/master/src/api)
 
 ## About
 
