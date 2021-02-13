@@ -61,7 +61,7 @@ export function Controls({ simulator }: { simulator: SimulationEnvironment }) {
   }
   function resetClicked() {
     simulator.stopTicking();
-    // XXX reset simulation
+    simulator.reset();
   }
 
   return (

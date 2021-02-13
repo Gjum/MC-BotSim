@@ -104,7 +104,6 @@ export class BotSim implements Bot, MutablePlayer {
     // in this simulation we connect really quickly, and never fail
     setImmediate(() => {
       // update simulation
-      console.log(`bot: simulate connected`);
       this.world.registerBot(this);
       this.handleConnected();
     });

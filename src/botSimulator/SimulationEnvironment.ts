@@ -4,18 +4,18 @@ import Vec3 from "../api/Vec3";
 import { BotSim } from "./BotSim";
 import { EventSystem } from "../EventSystem";
 import { World } from "./World";
-import { PlayerInventory } from "./WindowSim";
-import Look from "../api/Look";
+import CancelToken from "../api/CancelToken";
 
 type SimulationState = "stopped" | "running";
 
 export class SimulationEnvironment implements Environment {
   script: string;
+  cancelToken?: CancelToken;
   error?: Error;
 
   world = new World();
 
-  readonly tps = 20;
+  private tps = 20;
 
   private tickTimer?: NodeJS.Timeout;
 
@@ -27,30 +27,50 @@ export class SimulationEnvironment implements Environment {
   readonly onEachChange = this.changeEvent.onEach;
 
   constructor(script: string) {
-    this.script = script; // to satisfy type check
-    this.setScript(script);
+    this.script = script;
+    this.reset();
   }
 
-  /** Restart the simulation with that bot script. */
-  setScript(script: string) {
-    this.script = script;
+  /** Restart the simulation. */
+  async reset() {
+    if (this.cancelToken) {
+      await this.cancelToken.cancel(new Error("Stopping simulation"));
+    }
+    for (const bot of this.world.getBots()) {
+      this.world.unregisterBot(bot);
+    }
+    this.startNewScriptInstance();
+  }
+
+  /**
+   * Scripts are expected to look like this:
+   * ```js
+   * module.exports = async (env, cancelToken) => {
+   *   // ... do stuff with `env`
+   * }
+   * ```
+   */
+  startNewScriptInstance() {
     try {
+      this.cancelToken = new CancelToken();
       /** this gets passed into the script */
       const scriptModule = { exports: undefined as any };
       // execute the script. doesn't start the contained function though
-      Function("module", script)(scriptModule);
+      Function("module", this.script)(scriptModule);
       // execute the function contained in the script
-      const result = scriptModule.exports(this);
-      if (result.catch)
+      const result = scriptModule.exports(this, this.cancelToken);
+      // handle async errors
+      if (result.catch) {
         result.catch((err: any) => {
-          this.scriptError(err);
+          this.handleScriptError(err);
         });
+      }
     } catch (err) {
-      this.scriptError(err);
+      this.handleScriptError(err);
     }
   }
 
-  private scriptError(error: Error) {
+  private handleScriptError(error: Error) {
     this.error = error;
     this.changeEvent.emit();
   }
@@ -67,8 +87,9 @@ export class SimulationEnvironment implements Environment {
   }
 
   startTicking(tps = this.tps) {
-    if (this.tickTimer && tps === this.tps) return; // already ticking
+    if (this.tickTimer && this.tps === tps) return; // already ticking
     this.stopTicking();
+    this.tps = tps;
     this.tickTimer = setInterval(() => this.world.doTick(), this.tps);
     this.changeEvent.emit();
   }
@@ -77,6 +98,12 @@ export class SimulationEnvironment implements Environment {
     if (!this.tickTimer) return; // already stopped
     clearInterval(this.tickTimer);
     this.tickTimer = undefined;
+    this.changeEvent.emit();
+  }
+
+  setTps(tps: number) {
+    if (this.tickTimer) this.startTicking(tps);
+    else this.tps = tps;
     this.changeEvent.emit();
   }
 
