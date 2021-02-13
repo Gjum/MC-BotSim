@@ -4,7 +4,7 @@ export class CancelToken {
   private cancelHandlers: Record<number, CancelHandler> = {};
 
   /** The error with which this token was cancelled. */
-  error?: Error;
+  private error?: Error;
 
   constructor(parent?: CancelToken) {
     if (parent) {
@@ -29,7 +29,7 @@ export class CancelToken {
     const handlerId = ++this.nextHandlerId;
     this.cancelHandlers[handlerId] = handler;
     return () => {
-      this.cancelHandlers[handlerId];
+      delete this.cancelHandlers[handlerId];
     };
   }
 
@@ -48,9 +48,14 @@ export class CancelToken {
       try {
         await handlerPromise;
       } catch (handlerErr) {
+        if (handlerErr === error) continue;
         console.error(`Error in cancellation handler:`, handlerErr);
       }
     }
+  }
+
+  getError() {
+    return this.error;
   }
 
   check() {
