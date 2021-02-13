@@ -228,21 +228,21 @@ export class BotSim implements Bot, MutablePlayer {
   async waitJoinGame(cancelToken?: CancelToken): Promise<void> {
     if (this.connectionStatus === "online") return;
     this.connect();
-    let rmCancel: undefined | (() => void) = undefined;
-    let rmEvent: undefined | (() => void) = undefined;
+    const cleanup: (() => void)[] = [];
     try {
       return await new Promise<void>((resolve, reject) => {
-        if (cancelToken) rmCancel = cancelToken.onCancel(reject);
-        rmEvent = this.onEachConnectionChange((status) => {
-          if (status === "online") resolve();
-          else if (status === "offline") this.connect();
-          else if (status !== "connecting")
-            reject(new Error(`Connection failed: ${status}`));
-        });
+        if (cancelToken) cleanup.push(cancelToken.onCancel(reject));
+        cleanup.push(
+          this.onEachConnectionChange((status) => {
+            if (status === "online") resolve();
+            else if (status === "offline") this.connect();
+            else if (status !== "connecting")
+              reject(new Error(`Connection failed: ${status}`));
+          })
+        );
       });
     } finally {
-      if (rmCancel) rmCancel!();
-      if (rmEvent) rmEvent!();
+      cleanup.forEach((remove) => remove());
     }
   }
 
